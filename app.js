@@ -1,3 +1,5 @@
+import placeImageGalleries from "./assets/place-images/place-images.js";
+
 const roomId =
   new URLSearchParams(window.location.search).get("room") || "viaje-amigos";
 const maxVotes = 4;
@@ -312,6 +314,78 @@ const destinations = [
   },
 ];
 
+const flightWindow = {
+  departureFrom: "2026-10-03",
+  returnBy: "2026-11-01",
+  stayMin: 8,
+  stayMax: 10,
+  currency: "EUR",
+};
+
+const flightOrigins = [
+  {
+    code: "MAD",
+    city: "Madrid",
+    label: "Madrid",
+    kiwiSlug: "madrid-spain",
+    googleLabel: "Madrid",
+  },
+  {
+    code: "BCN",
+    city: "Barcelona",
+    label: "Barcelona",
+    kiwiSlug: "barcelona-spain",
+    googleLabel: "Barcelona",
+  },
+];
+
+const flightDestinations = [
+  {
+    id: "tunez",
+    name: "Túnez",
+    code: "TUN",
+    airport: "Túnez-Cartago",
+    kiwiSlug: "tunis-tunisia",
+    googleLabel: "Tunis Tunisia",
+  },
+  {
+    id: "rumania",
+    name: "Rumanía",
+    code: "OTP",
+    airport: "Bucarest Otopeni",
+    kiwiSlug: "bucharest-romania",
+    googleLabel: "Bucharest Romania",
+  },
+  {
+    id: "georgia",
+    name: "Georgia",
+    code: "KUT",
+    airport: "Kutaisi",
+    kiwiSlug: "kutaisi-georgia",
+    googleLabel: "Kutaisi Georgia",
+  },
+];
+
+const fallbackFlightProviders = [
+  {
+    key: "google",
+    label: "Google Flights",
+    summary: "Calendario flexible",
+  },
+  {
+    key: "kiwi",
+    label: "Kiwi",
+    summary: "Combinaciones low cost",
+  },
+  {
+    key: "skyscanner",
+    label: "Skyscanner",
+    summary: "Comparar agencias",
+  },
+];
+
+const flightLiveState = new Map();
+
 const placeQueries = {
   Túnez: "Tunis medina Tunisia",
   Cartago: "Carthage Tunisia ruins",
@@ -587,6 +661,512 @@ function renderDestinationGrid() {
     .join("");
 }
 
+function parseIsoDate(value) {
+  if (!value) {
+    return null;
+  }
+
+  const text = String(value);
+  const isoMatch = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    return new Date(
+      Date.UTC(Number(isoMatch[1]), Number(isoMatch[2]) - 1, Number(isoMatch[3])),
+    );
+  }
+
+  const date = new Date(text);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+}
+
+function toIsoDate(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function addDays(value, days) {
+  const date = typeof value === "string" ? parseIsoDate(value) : value;
+  const nextDate = new Date(date.getTime());
+  nextDate.setUTCDate(nextDate.getUTCDate() + days);
+  return nextDate;
+}
+
+function daysBetween(startValue, endValue) {
+  const start = parseIsoDate(startValue);
+  const end = parseIsoDate(endValue);
+  if (!start || !end) {
+    return null;
+  }
+
+  return Math.round((end.getTime() - start.getTime()) / 86400000);
+}
+
+function formatTravelDate(value) {
+  const date = parseIsoDate(value);
+  if (!date) {
+    return "";
+  }
+
+  return new Intl.DateTimeFormat("es-ES", {
+    day: "numeric",
+    month: "short",
+  }).format(date);
+}
+
+function formatTravelDateTime(value) {
+  const text = String(value || "");
+  const dateLabel = formatTravelDate(text);
+  const timeMatch = text.match(/T(\d{2}:\d{2})/);
+  return timeMatch ? `${dateLabel}, ${timeMatch[1]}` : dateLabel;
+}
+
+function formatPrice(value, currency = flightWindow.currency) {
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) {
+    return "Precio pendiente";
+  }
+
+  return new Intl.NumberFormat("es-ES", {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+function latestDepartureDate() {
+  return toIsoDate(addDays(flightWindow.returnBy, -flightWindow.stayMin));
+}
+
+function earliestReturnDate() {
+  return toIsoDate(addDays(flightWindow.departureFrom, flightWindow.stayMin));
+}
+
+function flightSearchKey(originCode, destinationCode) {
+  return `${originCode}-${destinationCode}`;
+}
+
+function getFlightSearches() {
+  return flightDestinations.flatMap((destination) =>
+    flightOrigins.map((origin) => ({
+      origin,
+      destination,
+      key: flightSearchKey(origin.code, destination.code),
+    })),
+  );
+}
+
+function getFlightConfig() {
+  return window.flightPriceConfig || {};
+}
+
+function hasFlightEndpoint() {
+  return Boolean(String(getFlightConfig().endpoint || "").trim());
+}
+
+function googleFlightsUrl(origin, destination) {
+  const query = [
+    "Flights",
+    `from ${origin.googleLabel}`,
+    `to ${destination.googleLabel}`,
+    `depart after ${flightWindow.departureFrom}`,
+    `return by ${flightWindow.returnBy}`,
+    `${flightWindow.stayMin} to ${flightWindow.stayMax} days`,
+  ].join(" ");
+  return `https://www.google.com/travel/flights?q=${encodeURIComponent(query)}`;
+}
+
+function kiwiFlightsUrl(origin, destination) {
+  return [
+    "https://www.kiwi.com/en/search/results",
+    origin.kiwiSlug,
+    destination.kiwiSlug,
+    `${flightWindow.departureFrom}_${latestDepartureDate()}`,
+    `${earliestReturnDate()}_${flightWindow.returnBy}`,
+  ].join("/");
+}
+
+function skyscannerFlightsUrl(origin, destination) {
+  const params = new URLSearchParams({
+    adultsv2: "1",
+    cabinclass: "economy",
+    currency: flightWindow.currency,
+    locale: "es-ES",
+    market: "ES",
+    rtn: "1",
+  });
+
+  return `https://www.skyscanner.es/transport/flights/${origin.code.toLowerCase()}/${destination.code.toLowerCase()}/?${params.toString()}`;
+}
+
+function flightProviderLinks(origin, destination) {
+  return {
+    google: googleFlightsUrl(origin, destination),
+    kiwi: kiwiFlightsUrl(origin, destination),
+    skyscanner: skyscannerFlightsUrl(origin, destination),
+  };
+}
+
+function renderFlightProviderLink(origin, destination, provider) {
+  const links = flightProviderLinks(origin, destination);
+  return `
+    <a href="${links[provider.key]}" target="_blank" rel="noreferrer">
+      <i data-lucide="external-link" aria-hidden="true"></i>
+      ${provider.label}
+    </a>
+  `;
+}
+
+function renderFlightOption(search, rank) {
+  const state = flightLiveState.get(search.key);
+  const provider = fallbackFlightProviders[rank];
+  const option = state?.options?.[rank];
+
+  if (state?.status === "loading") {
+    return `
+      <article class="flight-option flight-option--loading" aria-label="Cargando opción ${rank + 1}">
+        <span class="flight-rank">#${rank + 1}</span>
+        <span class="flight-skeleton flight-skeleton--price"></span>
+        <span class="flight-skeleton"></span>
+        <span class="flight-skeleton flight-skeleton--short"></span>
+      </article>
+    `;
+  }
+
+  if (option) {
+    const bookingUrl = option.bookingUrl || flightProviderLinks(search.origin, search.destination).google;
+    return `
+      <article class="flight-option">
+        <div class="flight-option__top">
+          <span class="flight-rank">#${rank + 1}</span>
+          <strong>${formatPrice(option.price, option.currency)}</strong>
+        </div>
+        <p>${formatTravelDateTime(option.departureDate)} - ${formatTravelDateTime(option.returnDate)}</p>
+        <p>${option.nights ? `${option.nights} noches · ` : ""}${escapeHtml(option.stopsLabel || "Escalas por confirmar")}</p>
+        <div class="flight-option__meta">
+          <span>${escapeHtml(option.airlines || "Aerolínea por confirmar")}</span>
+          <a href="${escapeHtml(bookingUrl)}" target="_blank" rel="noreferrer">
+            Ver oferta
+          </a>
+        </div>
+      </article>
+    `;
+  }
+
+  return `
+    <article class="flight-option flight-option--external">
+      <div class="flight-option__top">
+        <span class="flight-rank">#${rank + 1}</span>
+        <strong>${provider.summary}</strong>
+      </div>
+      <p>${search.origin.code} - ${search.destination.code} · ${flightWindow.stayMin}-${flightWindow.stayMax} noches</p>
+      <p>Ida ${formatTravelDate(flightWindow.departureFrom)}-${formatTravelDate(latestDepartureDate())}; vuelta hasta ${formatTravelDate(flightWindow.returnBy)}</p>
+      <div class="flight-provider-links">
+        ${renderFlightProviderLink(search.origin, search.destination, provider)}
+      </div>
+    </article>
+  `;
+}
+
+function renderFlightPair(destination, rank) {
+  const madridSearch = {
+    origin: flightOrigins[0],
+    destination,
+    key: flightSearchKey(flightOrigins[0].code, destination.code),
+  };
+  const barcelonaSearch = {
+    origin: flightOrigins[1],
+    destination,
+    key: flightSearchKey(flightOrigins[1].code, destination.code),
+  };
+
+  return `
+    <div class="flight-pair-row">
+      <div>
+        <span class="flight-origin-label">Madrid</span>
+        ${renderFlightOption(madridSearch, rank)}
+      </div>
+      <div>
+        <span class="flight-origin-label">Barcelona</span>
+        ${renderFlightOption(barcelonaSearch, rank)}
+      </div>
+    </div>
+  `;
+}
+
+function renderFlightComparator() {
+  const root = document.querySelector("#flight-comparator");
+  if (!root) {
+    return;
+  }
+
+  const configured = hasFlightEndpoint();
+  const statusText = configured
+    ? `Feed conectado: ${escapeHtml(getFlightConfig().providerLabel || "Proveedor live")}`
+    : "Enlaces live listos; feed de precios pendiente";
+
+  root.innerHTML = `
+    <div class="flight-toolbar">
+      <div class="flight-window">
+        <span><i data-lucide="calendar-days" aria-hidden="true"></i> Ida desde ${formatTravelDate(flightWindow.departureFrom)}</span>
+        <span><i data-lucide="undo-2" aria-hidden="true"></i> Vuelta hasta ${formatTravelDate(flightWindow.returnBy)}</span>
+        <span><i data-lucide="moon" aria-hidden="true"></i> ${flightWindow.stayMin}-${flightWindow.stayMax} noches</span>
+      </div>
+      <div class="flight-actions">
+        <span class="flight-status ${configured ? "is-ready" : "is-pending"}" id="flight-live-status">
+          <span class="sync-dot"></span>
+          ${statusText}
+        </span>
+        <button class="button button--ghost" type="button" data-refresh-flights>
+          <i data-lucide="refresh-cw" aria-hidden="true"></i>
+          Actualizar
+        </button>
+      </div>
+    </div>
+
+    <div class="flight-grid">
+      ${flightDestinations
+        .map(
+          (destination) => `
+            <article class="flight-destination">
+              <div class="flight-destination__head">
+                <div>
+                  <p class="eyebrow">${destination.code}</p>
+                  <h3>${destination.name}</h3>
+                </div>
+                <span>${destination.airport}</span>
+              </div>
+              <div class="flight-pair-head" aria-hidden="true">
+                <span>Madrid</span>
+                <span>Barcelona equivalente</span>
+              </div>
+              <div class="flight-pair-list">
+                ${[0, 1, 2].map((rank) => renderFlightPair(destination, rank)).join("")}
+              </div>
+            </article>
+          `,
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function setFlightStatus(message, status = "pending") {
+  const pill = document.querySelector("#flight-live-status");
+  if (!pill) {
+    return;
+  }
+
+  pill.className = `flight-status is-${status}`;
+  pill.innerHTML = `
+    <span class="sync-dot"></span>
+    ${escapeHtml(message)}
+  `;
+}
+
+function setupFlightComparatorControls() {
+  const button = document.querySelector("[data-refresh-flights]");
+  if (!button) {
+    return;
+  }
+
+  button.addEventListener("click", () => {
+    refreshFlightPrices();
+  });
+}
+
+function normalizeStops(value) {
+  const stops = Number(value);
+  if (!Number.isFinite(stops)) {
+    return "";
+  }
+
+  if (stops <= 0) {
+    return "Directo";
+  }
+
+  return stops === 1 ? "1 escala" : `${stops} escalas`;
+}
+
+function normalizeAirlines(value) {
+  if (Array.isArray(value)) {
+    return value.filter(Boolean).join(", ");
+  }
+
+  return value || "";
+}
+
+function extractRawFlightItems(payload) {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  return (
+    payload?.options ||
+    payload?.itineraries ||
+    payload?.results ||
+    payload?.data ||
+    []
+  );
+}
+
+function normalizeFlightOption(item) {
+  const route = Array.isArray(item.route) ? item.route : [];
+  const outboundSegments = route.filter((segment) => !segment.return);
+  const returnSegments = route.filter((segment) => segment.return);
+  const firstSegment = outboundSegments[0] || route[0] || {};
+  const lastReturnSegment = returnSegments[returnSegments.length - 1] || route[route.length - 1] || {};
+  const departureDate =
+    item.departureDate ||
+    item.outboundDate ||
+    item.outbound?.date ||
+    item.local_departure ||
+    firstSegment.local_departure;
+  const returnDate =
+    item.returnDate ||
+    item.inboundDate ||
+    item.inbound?.date ||
+    item.local_return ||
+    lastReturnSegment.local_arrival ||
+    lastReturnSegment.local_departure;
+  const nights = Number(item.nights || item.nightsInDest || daysBetween(departureDate, returnDate));
+  const departure = parseIsoDate(departureDate);
+  const arrival = parseIsoDate(returnDate);
+
+  if (!departure || !arrival || !Number.isFinite(nights)) {
+    return null;
+  }
+
+  if (
+    departure < parseIsoDate(flightWindow.departureFrom) ||
+    arrival > parseIsoDate(flightWindow.returnBy) ||
+    nights < flightWindow.stayMin ||
+    nights > flightWindow.stayMax
+  ) {
+    return null;
+  }
+
+  const outboundStops =
+    item.outboundStops ??
+    item.stops ??
+    Math.max(0, outboundSegments.length - 1);
+  const returnStops =
+    item.returnStops ??
+    item.stops ??
+    Math.max(0, returnSegments.length - 1);
+  const maxStops = Math.max(Number(outboundStops) || 0, Number(returnStops) || 0);
+
+  return {
+    price: item.price?.total ?? item.price,
+    currency: item.price?.currency || item.currency || flightWindow.currency,
+    departureDate,
+    returnDate,
+    nights,
+    airlines: normalizeAirlines(
+      item.airlines || item.carriers || item.validatingAirlineCodes || item.airline,
+    ),
+    stopsLabel: normalizeStops(maxStops),
+    bookingUrl: item.bookingUrl || item.deep_link || item.url,
+  };
+}
+
+function normalizeFlightOptions(payload) {
+  return extractRawFlightItems(payload)
+    .map((item) => normalizeFlightOption(item))
+    .filter(Boolean)
+    .sort((a, b) => Number(a.price || Infinity) - Number(b.price || Infinity))
+    .slice(0, 3);
+}
+
+function buildFlightRequestUrl(search) {
+  const endpoint = String(getFlightConfig().endpoint || "").trim();
+  const url = new URL(endpoint, window.location.href);
+  url.searchParams.set("origin", search.origin.code);
+  url.searchParams.set("destination", search.destination.code);
+  url.searchParams.set("departure_from", flightWindow.departureFrom);
+  url.searchParams.set("departure_to", latestDepartureDate());
+  url.searchParams.set("return_by", flightWindow.returnBy);
+  url.searchParams.set("stay_min", String(flightWindow.stayMin));
+  url.searchParams.set("stay_max", String(flightWindow.stayMax));
+  url.searchParams.set("currency", flightWindow.currency);
+  url.searchParams.set("limit", "12");
+  return url;
+}
+
+async function fetchFlightOptions(search) {
+  const response = await fetch(buildFlightRequestUrl(search), {
+    headers: {
+      Accept: "application/json",
+      ...(getFlightConfig().headers || {}),
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`No se pudo leer ${search.key}`);
+  }
+
+  return normalizeFlightOptions(await response.json());
+}
+
+async function refreshFlightPrices() {
+  const searches = getFlightSearches();
+
+  if (!hasFlightEndpoint()) {
+    setFlightStatus("Feed de precios pendiente; usando comparadores externos", "pending");
+    return;
+  }
+
+  searches.forEach((search) => {
+    flightLiveState.set(search.key, { status: "loading", options: [] });
+  });
+  renderFlightComparator();
+  setupFlightComparatorControls();
+  refreshIcons();
+  setFlightStatus("Actualizando precios live", "loading");
+
+  const results = await Promise.allSettled(
+    searches.map(async (search) => ({
+      search,
+      options: await fetchFlightOptions(search),
+    })),
+  );
+
+  let successfulSearches = 0;
+  results.forEach((result) => {
+    if (result.status === "fulfilled") {
+      successfulSearches += 1;
+      flightLiveState.set(result.value.search.key, {
+        status: "loaded",
+        options: result.value.options,
+      });
+      return;
+    }
+
+    const index = results.indexOf(result);
+    const search = searches[index];
+    flightLiveState.set(search.key, { status: "error", options: [] });
+  });
+
+  renderFlightComparator();
+  setupFlightComparatorControls();
+  refreshIcons();
+
+  if (successfulSearches) {
+    setFlightStatus(`Precios actualizados en ${successfulSearches}/6 rutas`, "live");
+  } else {
+    setFlightStatus("No se pudo leer el feed live; usando enlaces externos", "error");
+  }
+}
+
+function setupFlightComparator() {
+  renderFlightComparator();
+  setupFlightComparatorControls();
+  if (hasFlightEndpoint()) {
+    refreshFlightPrices();
+  }
+}
+
 function renderPlaceToken(place) {
   const query = placeQueries[place] || place;
   return `
@@ -798,6 +1378,12 @@ async function fetchPlaceImages(place, query) {
     return placeImageCache.get(place);
   }
 
+  const localImages = placeImageGalleries[place] || [];
+  if (localImages.length) {
+    placeImageCache.set(place, Promise.resolve(localImages));
+    return placeImageCache.get(place);
+  }
+
   const curated = curatedPlaceImages[place] || [];
   const searches = placeSearchQueries(place, query);
   const request = Promise.allSettled([
@@ -841,7 +1427,7 @@ function renderPlacePreview(token, images) {
         )
         .join("")}
     </span>
-    <span class="place-popover__source">Imágenes de Wikipedia y Wikimedia Commons</span>
+    <span class="place-popover__source">Imágenes locales de referencia</span>
   `;
   positionPlacePopover(token);
 }
@@ -1291,6 +1877,7 @@ function refreshIcons() {
 
 renderVoteBars();
 renderDestinationGrid();
+setupFlightComparator();
 renderDetails();
 setupPlacePreviews();
 setupCopyLink();
