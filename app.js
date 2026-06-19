@@ -823,6 +823,7 @@ function renderPlacePreview(token, images) {
         token.dataset.query,
       )}" target="_blank" rel="noreferrer">Buscar en Wikimedia Commons</a>
     `;
+    positionPlacePopover(token);
     return;
   }
 
@@ -842,16 +843,75 @@ function renderPlacePreview(token, images) {
     </span>
     <span class="place-popover__source">Imágenes de Wikipedia y Wikimedia Commons</span>
   `;
+  positionPlacePopover(token);
+}
+
+function isPlacePreviewOpen(token) {
+  return token.matches(":hover, :focus, :focus-within");
+}
+
+function positionPlacePopover(token) {
+  const panel = token.querySelector("[data-preview-panel]");
+  if (!panel) {
+    return;
+  }
+
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const margin = viewportWidth < 720 ? 14 : 18;
+  const gap = 10;
+  const maxWidth = viewportWidth < 720 ? 340 : 620;
+  const width = Math.max(260, Math.min(maxWidth, viewportWidth - margin * 2));
+  const tokenRect = token.getBoundingClientRect();
+  const centeredLeft = tokenRect.left + tokenRect.width / 2 - width / 2;
+  const left = Math.max(margin, Math.min(centeredLeft, viewportWidth - width - margin));
+  const maxHeight = Math.max(180, viewportHeight - margin * 2);
+  const belowTop = tokenRect.bottom + gap;
+
+  panel.classList.add("place-popover--positioned");
+  panel.style.setProperty("--place-popover-width", `${Math.round(width)}px`);
+  panel.style.setProperty("--place-popover-left", `${Math.round(left)}px`);
+  panel.style.setProperty("--place-popover-top", `${Math.round(Math.max(margin, belowTop))}px`);
+  panel.style.setProperty("--place-popover-max-height", `${Math.round(maxHeight)}px`);
+
+  window.requestAnimationFrame(() => {
+    if (!document.body.contains(token) || !isPlacePreviewOpen(token)) {
+      return;
+    }
+
+    const visiblePanelHeight = Math.min(panel.getBoundingClientRect().height, maxHeight);
+    const aboveTop = tokenRect.top - gap - visiblePanelHeight;
+    const wouldOverflowBottom = belowTop + visiblePanelHeight > viewportHeight - margin;
+    let top = belowTop;
+
+    if (wouldOverflowBottom && aboveTop >= margin) {
+      top = aboveTop;
+    } else if (wouldOverflowBottom) {
+      top = Math.max(margin, viewportHeight - margin - visiblePanelHeight);
+    }
+
+    panel.style.setProperty("--place-popover-top", `${Math.round(top)}px`);
+  });
+}
+
+function positionOpenPlacePopovers() {
+  document.querySelectorAll(".place-token").forEach((token) => {
+    if (isPlacePreviewOpen(token)) {
+      positionPlacePopover(token);
+    }
+  });
 }
 
 function loadPlacePreview(token) {
   if (token.dataset.previewState === "loaded" || token.dataset.previewState === "loading") {
+    positionPlacePopover(token);
     return;
   }
 
   const panel = token.querySelector("[data-preview-panel]");
   token.dataset.previewState = "loading";
   panel.innerHTML = '<span class="place-popover__status">Cargando imágenes...</span>';
+  positionPlacePopover(token);
 
   fetchPlaceImages(token.dataset.place, token.dataset.query)
     .then((images) => {
@@ -866,6 +926,7 @@ function loadPlacePreview(token) {
           token.dataset.query,
         )}" target="_blank" rel="noreferrer">Abrir búsqueda</a>
       `;
+      positionPlacePopover(token);
     });
 }
 
@@ -876,11 +937,15 @@ function setupPlacePreviews() {
       return;
     }
     loadPlacePreview(token);
+    positionPlacePopover(token);
   };
 
   document.addEventListener("mouseover", activate);
   document.addEventListener("focusin", activate);
   document.addEventListener("touchstart", activate, { passive: true });
+  document.addEventListener("click", activate);
+  window.addEventListener("resize", positionOpenPlacePopovers);
+  window.addEventListener("scroll", positionOpenPlacePopovers, { passive: true });
 }
 
 function setupCopyLink() {

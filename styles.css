@@ -677,9 +677,17 @@ h3 {
   text-align: left;
 }
 
-.route-day:nth-child(2n) .place-popover {
-  left: auto;
-  right: 0;
+.place-popover--positioned {
+  position: fixed;
+  z-index: 80;
+  top: var(--place-popover-top, 14px);
+  right: auto;
+  left: var(--place-popover-left, 14px);
+  width: var(--place-popover-width, min(620px, calc(100vw - 36px)));
+  max-height: var(--place-popover-max-height, calc(100vh - 28px));
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .place-token:hover .place-popover,
