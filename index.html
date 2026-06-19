@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Comparativa de viaje de octubre para decidir entre Túnez, Rumanía y Georgia."
+    />
+    <meta name="theme-color" content="#133f52" />
+    <title>Viaje de octubre | Túnez, Georgia o Rumanía</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="Ir al inicio">
+        <span class="brand__mark">OCT</span>
+        <span>Viaje Andrés, Ilias y Dani</span>
+      </a>
+      <nav class="nav-links" aria-label="Secciones">
+        <a href="#comparativa">Comparativa</a>
+        <a href="#fechas">Fechas</a>
+        <a href="#rutas">Rutas</a>
+        <a href="#notas">Notas</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero-section">
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <p class="kicker">Llamada de decisión - domingo 21 de junio</p>
+            <h1>Viaje de octubre 2026</h1>
+            <p class="hero-lede">
+              Tres opciones sobre la mesa, una votación hecha y una llamada para cerrar
+              fechas, presupuesto y ruta sin tener que saltar entre documentos.
+            </p>
+            <div class="hero-actions">
+              <a class="button button--primary" href="#notas">
+                <i data-lucide="messages-square" aria-hidden="true"></i>
+                Abrir notas
+              </a>
+              <button class="button button--ghost" type="button" data-copy-link>
+                <i data-lucide="link" aria-hidden="true"></i>
+                Copiar enlace
+              </button>
+            </div>
+          </div>
+
+          <div class="photo-strip" aria-label="Fotos de los destinos">
+            <figure>
+              <img
+                src="https://images.unsplash.com/photo-1607869861980-da5f9b8b4969?q=80&amp;w=1200&amp;auto=format&amp;fit=crop"
+                alt="Sidi Bou Said, Túnez"
+              />
+              <figcaption>Túnez</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="https://images.unsplash.com/photo-1680003210401-08fa173ee905?q=80&amp;w=1200&amp;auto=format&amp;fit=crop"
+                alt="Castillo de Peleș en Sinaia, Rumanía"
+              />
+              <figcaption>Rumanía</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="https://images.unsplash.com/photo-1761760701075-e9a438acd8c6?q=80&amp;w=1200&amp;auto=format&amp;fit=crop"
+                alt="Stepantsminda y montañas del Cáucaso, Georgia"
+              />
+              <figcaption>Georgia</figcaption>
+            </figure>
+          </div>
+
+          <aside class="decision-panel" aria-labelledby="leader-title">
+            <div>
+              <p class="eyebrow">Resultado actual</p>
+              <h2 id="leader-title">Gana Túnez con 4 votos</h2>
+            </div>
+            <div class="vote-bars" id="vote-bars"></div>
+            <div class="call-box">
+              <span class="call-box__label">Objetivo de la llamada</span>
+              <p>
+                Elegir destino, bloquear una ventana entre el 3 y el 24 de octubre y
+                confirmar qué costes faltan antes de reservar.
+              </p>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="band band--light" id="comparativa">
+        <div class="section-shell">
+          <div class="section-heading">
+            <p class="eyebrow">Comparativa</p>
+            <h2>Lo importante de cada opción</h2>
+          </div>
+          <div class="destination-grid" id="destination-grid"></div>
+        </div>
+      </section>
+
+      <section class="band" id="fechas">
+        <div class="section-shell dates-layout">
+          <div class="section-heading">
+            <p class="eyebrow">Fechas</p>
+            <h2>Octubre después del día 2, idealmente antes del 25</h2>
+            <p>
+              Ventana ideal: del sábado 3 al sábado 24 de octubre. Las capturas ya
+              traen un ejemplo claro para Georgia del 10 al 20; Túnez desde Madrid
+              aparece saliendo el 25, que queda justo fuera del ideal.
+            </p>
+          </div>
+          <div>
+            <div class="calendar" id="calendar" aria-label="Calendario de octubre 2026"></div>
+            <div class="date-picks" id="date-picks"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="band band--light" id="rutas">
+        <div class="section-shell">
+          <div class="section-heading">
+            <p class="eyebrow">Rutas y documentos</p>
+            <h2>Detalle por destino</h2>
+          </div>
+          <div class="detail-stack" id="detail-stack"></div>
+        </div>
+      </section>
+
+      <section class="band notes-band" id="notas">
+        <div class="section-shell notes-layout">
+          <div class="notes-intro">
+            <p class="eyebrow">Notas en vivo</p>
+            <h2>Lo que salga durante la llamada</h2>
+            <p>
+              Las notas se sincronizan con Firebase cuando añadas configuración. Mientras
+              tanto quedan guardadas en este navegador para preparar la conversación.
+            </p>
+            <div class="sync-pill" id="sync-status">
+              <span class="sync-dot"></span>
+              Iniciando sincronización
+            </div>
+            <div class="presence" aria-label="Personas conectadas">
+              <span>En la sala</span>
+              <div id="presence-list"></div>
+            </div>
+          </div>
+
+          <div class="notes-surface">
+            <form class="note-form" id="note-form">
+              <div class="form-row">
+                <label>
+                  Nombre
+                  <select id="note-author" name="author">
+                    <option>Andrés</option>
+                    <option>Ilias</option>
+                    <option>Dani</option>
+                    <option>Invitado</option>
+                  </select>
+                </label>
+                <label>
+                  Tema
+                  <select id="note-topic" name="topic">
+                    <option>General</option>
+                    <option>Túnez</option>
+                    <option>Rumanía</option>
+                    <option>Georgia</option>
+                    <option>Fechas</option>
+                    <option>Presupuesto</option>
+                    <option>Ruta</option>
+                  </select>
+                </label>
+              </div>
+              <label>
+                Nota
+                <textarea
+                  id="note-text"
+                  name="text"
+                  rows="4"
+                  maxlength="600"
+                  placeholder="Ejemplo: confirmar si queremos 8 o 10 días."
+                  required
+                ></textarea>
+              </label>
+              <div class="form-actions">
+                <button class="button button--primary" type="submit">
+                  <i data-lucide="send" aria-hidden="true"></i>
+                  Añadir nota
+                </button>
+                <button class="button button--ghost" type="button" data-export-notes>
+                  <i data-lucide="download" aria-hidden="true"></i>
+                  Exportar
+                </button>
+              </div>
+            </form>
+            <div class="notes-list" id="notes-list" aria-live="polite"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <dialog class="image-dialog" id="image-dialog">
+      <button class="dialog-close" type="button" data-close-dialog aria-label="Cerrar">
+        <i data-lucide="x" aria-hidden="true"></i>
+      </button>
+      <img id="dialog-image" alt="" />
+      <p id="dialog-caption"></p>
+    </dialog>
+
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <script src="./firebase-config.js"></script>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
