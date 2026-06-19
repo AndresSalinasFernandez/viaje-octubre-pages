@@ -364,6 +364,60 @@ const placeQueries = {
   Kakheti: "Kakheti Georgia vineyard",
 };
 
+const galleryImageTarget = 8;
+
+const gallerySearchQueries = {
+  Túnez: ["Tunis medina Tunisia", "Sidi Bou Said Tunisia", "Carthage Tunisia"],
+  Cartago: ["Carthage ruins Tunisia", "Carthage archaeological site", "Antonine Baths Carthage"],
+  "Sidi Bou Said": ["Sidi Bou Said Tunisia blue white village", "Sidi Bou Said street"],
+  Hammamet: ["Hammamet Tunisia medina beach", "Hammamet kasbah Tunisia"],
+  Kairuán: ["Kairouan Tunisia mosque medina", "Great Mosque of Kairouan"],
+  Tozeur: ["Tozeur Tunisia oasis", "Tozeur medina Tunisia", "Nefta Tozeur Star Wars"],
+  Chebika: ["Chebika Tunisia oasis waterfall", "Chebika oasis Tunisia"],
+  Tamerza: ["Tamerza Tunisia oasis waterfall", "Tamerza canyon Tunisia", "Tamerza Tunisia"],
+  Mides: ["Mides Tunisia canyon oasis", "Mides Tunisia"],
+  "Chott el Jerid": ["Chott el Djerid Tunisia salt lake", "Chott el Jerid"],
+  Douz: ["Douz Tunisia Sahara dunes", "Douz desert Tunisia"],
+  Matmata: ["Matmata Tunisia troglodyte", "Matmata Star Wars Tunisia"],
+  Tataouine: ["Tataouine Tunisia ksar", "Tataouine Tunisia desert"],
+  "Ksar Ouled Soltane": ["Ksar Ouled Soltane Tunisia"],
+  "Ksar Hadada": ["Ksar Hadada Tunisia"],
+  Chenini: ["Chenini Tunisia village", "Chenini Tataouine Tunisia"],
+  Douiret: ["Douiret Tunisia village", "Douiret Tataouine Tunisia"],
+  "El Jem": ["El Djem amphitheatre Tunisia", "El Jem Tunisia"],
+  Susa: ["Sousse Tunisia medina", "Sousse Tunisia beach"],
+  Dougga: ["Dougga Tunisia ruins", "Dougga archaeological site"],
+  Bucarest: ["Bucharest Romania old town", "Bucharest Palace of Parliament", "Romanian Athenaeum"],
+  Sinaia: ["Peles Castle Sinaia Romania", "Sinaia Romania Carpathians"],
+  Brașov: ["Brasov Romania old town", "Brasov Black Church", "Tampa Brasov"],
+  Râșnov: ["Rasnov Citadel Romania", "Rasnov Romania"],
+  Viscri: ["Viscri Romania village", "Viscri fortified church"],
+  Sighișoara: ["Sighisoara Romania citadel", "Sighisoara clock tower"],
+  Biertan: ["Biertan fortified church Romania", "Biertan Romania"],
+  Sibiu: ["Sibiu Romania old town", "Sibiu Piata Mare", "Bridge of Lies Sibiu"],
+  Transfăgărășan: ["Transfagarasan Romania road", "Transfagarasan Balea"],
+  "Lago Bâlea": ["Balea Lake Romania", "Lacul Balea Romania"],
+  "Curtea de Argeș": ["Curtea de Arges monastery", "Curtea de Arges Romania"],
+  Iași: ["Iasi Romania Palace of Culture", "Iasi Romania"],
+  Chisináu: ["Chisinau Moldova city", "Chisinau cathedral"],
+  "Orheiul Vechi": ["Orheiul Vechi Moldova monastery", "Old Orhei Moldova"],
+  Kutaisi: ["Kutaisi Georgia city", "Bagrati Cathedral Kutaisi"],
+  Gelati: ["Gelati Monastery Georgia"],
+  "Cueva Prometheus": ["Prometheus Cave Georgia", "Prometheus Cave Natural Monument"],
+  Mestia: ["Mestia Georgia Svaneti towers", "Mestia Svaneti"],
+  Ushguli: ["Ushguli Georgia Svaneti", "Ushguli towers"],
+  Zugdidi: ["Zugdidi Georgia Dadiani Palace", "Zugdidi Georgia"],
+  Ananuri: ["Ananuri Fortress Georgia", "Ananuri Georgia"],
+  Gudauri: ["Gudauri Georgia mountains", "Gudauri ski Georgia"],
+  Kazbegi: ["Stepantsminda Kazbegi Georgia", "Mount Kazbek Georgia"],
+  Gergeti: ["Gergeti Trinity Church Georgia", "Gergeti Kazbegi"],
+  "Valle de Truso": ["Truso Valley Georgia", "Truso Valley Kazbegi"],
+  Juta: ["Juta Georgia village", "Juta Chaukhi Georgia"],
+  Tiflis: ["Tbilisi Georgia old town", "Narikala Tbilisi", "Tbilisi sulfur baths"],
+  Sighnaghi: ["Sighnaghi Georgia", "Signagi Georgia Kakheti"],
+  Kakheti: ["Kakheti Georgia vineyard", "Alazani Valley Georgia", "Kakheti wine Georgia"],
+};
+
 const wikipediaPageTitles = {
   Túnez: ["Tunis", "Medina of Tunis", "Bardo National Museum (Tunis)"],
   Cartago: ["Archaeological site of Carthage", "Carthage", "Baths of Antoninus"],
@@ -700,14 +754,14 @@ async function fetchWikipediaImages(place, query) {
     }));
 }
 
-async function fetchCommonsImages(query) {
+async function fetchCommonsImages(query, limit = 12) {
   const params = new URLSearchParams({
     action: "query",
     format: "json",
     origin: "*",
     generator: "search",
     gsrnamespace: "6",
-    gsrlimit: "8",
+    gsrlimit: String(limit),
     gsrsearch: query,
     prop: "imageinfo",
     iiprop: "url|mime",
@@ -734,20 +788,25 @@ async function fetchCommonsImages(query) {
     .filter((image) => image.src && image.mime.startsWith("image/") && image.mime !== "image/svg+xml");
 }
 
+function placeSearchQueries(place, query) {
+  const searches = gallerySearchQueries[place] || [query, `${place} landmark`, `${place} travel`];
+  return [...new Set(searches.filter(Boolean))].slice(0, 3);
+}
+
 async function fetchPlaceImages(place, query) {
   if (placeImageCache.has(place)) {
     return placeImageCache.get(place);
   }
 
   const curated = curatedPlaceImages[place] || [];
-  const request = fetchWikipediaImages(place, query)
-    .then((images) => uniqueImages([...curated, ...images]).slice(0, 4))
-    .catch(() => {
-      if (curated.length) {
-        return curated;
-      }
-      return fetchCommonsImages(query).then((images) => uniqueImages(images).slice(0, 4));
-    });
+  const searches = placeSearchQueries(place, query);
+  const request = Promise.allSettled([
+    fetchWikipediaImages(place, query),
+    ...searches.map((search) => fetchCommonsImages(search)),
+  ]).then((results) => {
+    const fetched = results.flatMap((result) => (result.status === "fulfilled" ? result.value : []));
+    return uniqueImages([...curated, ...fetched]).slice(0, galleryImageTarget);
+  });
 
   placeImageCache.set(place, request);
   return request;
