@@ -634,7 +634,7 @@ h3 {
   padding: 12px;
 }
 
-.flight-option--external {
+.flight-option--empty {
   background: linear-gradient(180deg, #ffffff 0%, #f8fbfc 100%);
 }
 

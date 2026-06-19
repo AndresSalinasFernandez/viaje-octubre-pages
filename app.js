@@ -366,24 +366,6 @@ const flightDestinations = [
   },
 ];
 
-const fallbackFlightProviders = [
-  {
-    key: "google",
-    label: "Google Flights",
-    summary: "Calendario flexible",
-  },
-  {
-    key: "kiwi",
-    label: "Kiwi",
-    summary: "Combinaciones low cost",
-  },
-  {
-    key: "skyscanner",
-    label: "Skyscanner",
-    summary: "Comparar agencias",
-  },
-];
-
 const flightLiveState = new Map();
 
 const placeQueries = {
@@ -765,131 +747,133 @@ function hasFlightEndpoint() {
   return Boolean(String(getFlightConfig().endpoint || "").trim());
 }
 
-function googleFlightsUrl(origin, destination) {
-  const query = [
-    "Flights",
-    `from ${origin.googleLabel}`,
-    `to ${destination.googleLabel}`,
-    `depart after ${flightWindow.departureFrom}`,
-    `return by ${flightWindow.returnBy}`,
-    `${flightWindow.stayMin} to ${flightWindow.stayMax} days`,
-  ].join(" ");
-  return `https://www.google.com/travel/flights?q=${encodeURIComponent(query)}`;
-}
-
-function kiwiFlightsUrl(origin, destination) {
-  return [
-    "https://www.kiwi.com/en/search/results",
-    origin.kiwiSlug,
-    destination.kiwiSlug,
-    `${flightWindow.departureFrom}_${latestDepartureDate()}`,
-    `${earliestReturnDate()}_${flightWindow.returnBy}`,
-  ].join("/");
-}
-
-function skyscannerFlightsUrl(origin, destination) {
-  const params = new URLSearchParams({
-    adultsv2: "1",
-    cabinclass: "economy",
-    currency: flightWindow.currency,
-    locale: "es-ES",
-    market: "ES",
-    rtn: "1",
-  });
-
-  return `https://www.skyscanner.es/transport/flights/${origin.code.toLowerCase()}/${destination.code.toLowerCase()}/?${params.toString()}`;
-}
-
-function flightProviderLinks(origin, destination) {
+function getFlightSearch(originCode, destination) {
+  const origin = flightOrigins.find((item) => item.code === originCode) || flightOrigins[0];
   return {
-    google: googleFlightsUrl(origin, destination),
-    kiwi: kiwiFlightsUrl(origin, destination),
-    skyscanner: skyscannerFlightsUrl(origin, destination),
+    origin,
+    destination,
+    key: flightSearchKey(origin.code, destination.code),
   };
 }
 
-function renderFlightProviderLink(origin, destination, provider) {
-  const links = flightProviderLinks(origin, destination);
+function getFlightSearchState(search) {
+  const state = flightLiveState.get(search.key);
+  return state || { status: hasFlightEndpoint() ? "idle" : "pending", options: [] };
+}
+
+function getSortedFlightOptions(search) {
+  return [...(getFlightSearchState(search).options || [])].sort(
+    (a, b) => Number(a.price || Infinity) - Number(b.price || Infinity),
+  );
+}
+
+function dateOnly(value) {
+  return String(value || "").slice(0, 10);
+}
+
+function sameFlightDates(left, right) {
+  return (
+    dateOnly(left?.departureDate) === dateOnly(right?.departureDate) &&
+    dateOnly(left?.returnDate) === dateOnly(right?.returnDate)
+  );
+}
+
+function findEquivalentBarcelonaOption(destination, madridOption) {
+  if (!madridOption) {
+    return null;
+  }
+
+  const barcelonaSearch = getFlightSearch("BCN", destination);
+  return getSortedFlightOptions(barcelonaSearch).find((option) =>
+    sameFlightDates(option, madridOption),
+  );
+}
+
+function renderFlightLoading(rank) {
   return `
-    <a href="${links[provider.key]}" target="_blank" rel="noreferrer">
-      <i data-lucide="external-link" aria-hidden="true"></i>
-      ${provider.label}
-    </a>
+    <article class="flight-option flight-option--loading" aria-label="Cargando opción ${rank + 1}">
+      <span class="flight-rank">#${rank + 1}</span>
+      <span class="flight-skeleton flight-skeleton--price"></span>
+      <span class="flight-skeleton"></span>
+      <span class="flight-skeleton flight-skeleton--short"></span>
+    </article>
   `;
 }
 
-function renderFlightOption(search, rank) {
-  const state = flightLiveState.get(search.key);
-  const provider = fallbackFlightProviders[rank];
-  const option = state?.options?.[rank];
-
-  if (state?.status === "loading") {
-    return `
-      <article class="flight-option flight-option--loading" aria-label="Cargando opción ${rank + 1}">
-        <span class="flight-rank">#${rank + 1}</span>
-        <span class="flight-skeleton flight-skeleton--price"></span>
-        <span class="flight-skeleton"></span>
-        <span class="flight-skeleton flight-skeleton--short"></span>
-      </article>
-    `;
-  }
-
-  if (option) {
-    const bookingUrl = option.bookingUrl || flightProviderLinks(search.origin, search.destination).google;
-    return `
-      <article class="flight-option">
-        <div class="flight-option__top">
-          <span class="flight-rank">#${rank + 1}</span>
-          <strong>${formatPrice(option.price, option.currency)}</strong>
-        </div>
-        <p>${formatTravelDateTime(option.departureDate)} - ${formatTravelDateTime(option.returnDate)}</p>
-        <p>${option.nights ? `${option.nights} noches · ` : ""}${escapeHtml(option.stopsLabel || "Escalas por confirmar")}</p>
-        <div class="flight-option__meta">
-          <span>${escapeHtml(option.airlines || "Aerolínea por confirmar")}</span>
-          <a href="${escapeHtml(bookingUrl)}" target="_blank" rel="noreferrer">
-            Ver oferta
-          </a>
-        </div>
-      </article>
-    `;
-  }
-
+function renderFlightEmpty(rank, message, detail = "") {
   return `
-    <article class="flight-option flight-option--external">
+    <article class="flight-option flight-option--empty">
       <div class="flight-option__top">
         <span class="flight-rank">#${rank + 1}</span>
-        <strong>${provider.summary}</strong>
+        <strong>${escapeHtml(message)}</strong>
       </div>
-      <p>${search.origin.code} - ${search.destination.code} · ${flightWindow.stayMin}-${flightWindow.stayMax} noches</p>
-      <p>Ida ${formatTravelDate(flightWindow.departureFrom)}-${formatTravelDate(latestDepartureDate())}; vuelta hasta ${formatTravelDate(flightWindow.returnBy)}</p>
-      <div class="flight-provider-links">
-        ${renderFlightProviderLink(search.origin, search.destination, provider)}
+      ${detail ? `<p>${escapeHtml(detail)}</p>` : ""}
+    </article>
+  `;
+}
+
+function renderFlightOption(option, rank, label = "") {
+  return `
+    <article class="flight-option">
+      <div class="flight-option__top">
+        <span class="flight-rank">#${rank + 1}</span>
+        <strong>${formatPrice(option.price, option.currency)}</strong>
+      </div>
+      <p>${formatTravelDateTime(option.departureDate)} - ${formatTravelDateTime(option.returnDate)}</p>
+      <p>${option.nights ? `${option.nights} noches · ` : ""}${escapeHtml(option.stopsLabel || "Escalas por confirmar")}</p>
+      ${option.routeLabel ? `<p>${escapeHtml(option.routeLabel)}</p>` : ""}
+      ${option.durationLabel ? `<p>${escapeHtml(option.durationLabel)}</p>` : ""}
+      <div class="flight-option__meta">
+        <span>${escapeHtml(option.airlines || "Aerolínea por confirmar")}</span>
+        ${label ? `<span>${escapeHtml(label)}</span>` : ""}
       </div>
     </article>
   `;
 }
 
 function renderFlightPair(destination, rank) {
-  const madridSearch = {
-    origin: flightOrigins[0],
-    destination,
-    key: flightSearchKey(flightOrigins[0].code, destination.code),
-  };
-  const barcelonaSearch = {
-    origin: flightOrigins[1],
-    destination,
-    key: flightSearchKey(flightOrigins[1].code, destination.code),
-  };
+  const madridSearch = getFlightSearch("MAD", destination);
+  const barcelonaSearch = getFlightSearch("BCN", destination);
+  const madridState = getFlightSearchState(madridSearch);
+  const barcelonaState = getFlightSearchState(barcelonaSearch);
+  const madridOption = getSortedFlightOptions(madridSearch)[rank];
+  const barcelonaOption = findEquivalentBarcelonaOption(destination, madridOption);
+
+  const madridCard =
+    madridState.status === "loading"
+      ? renderFlightLoading(rank)
+      : madridOption
+        ? renderFlightOption(madridOption, rank, "Madrid")
+        : renderFlightEmpty(
+            rank,
+            hasFlightEndpoint() ? "Sin resultado Kiwi" : "Feed Kiwi pendiente",
+            hasFlightEndpoint()
+              ? "No hay una opción que cumpla la ventana configurada."
+              : "Hace falta un endpoint seguro de Kiwi para traer precios reales.",
+          );
+
+  const barcelonaCard =
+    barcelonaState.status === "loading"
+      ? renderFlightLoading(rank)
+      : barcelonaOption
+        ? renderFlightOption(barcelonaOption, rank, "Mismas fechas")
+        : renderFlightEmpty(
+            rank,
+            madridOption ? "Sin equivalente BCN" : "Esperando Madrid",
+            madridOption
+              ? `No hay precio BCN para ${formatTravelDate(madridOption.departureDate)} - ${formatTravelDate(madridOption.returnDate)}.`
+              : "Primero se necesitan las opciones más baratas desde Madrid.",
+          );
 
   return `
     <div class="flight-pair-row">
       <div>
         <span class="flight-origin-label">Madrid</span>
-        ${renderFlightOption(madridSearch, rank)}
+        ${madridCard}
       </div>
       <div>
         <span class="flight-origin-label">Barcelona</span>
-        ${renderFlightOption(barcelonaSearch, rank)}
+        ${barcelonaCard}
       </div>
     </div>
   `;
@@ -903,8 +887,8 @@ function renderFlightComparator() {
 
   const configured = hasFlightEndpoint();
   const statusText = configured
-    ? `Feed conectado: ${escapeHtml(getFlightConfig().providerLabel || "Proveedor live")}`
-    : "Enlaces live listos; feed de precios pendiente";
+    ? `Kiwi live conectado: ${escapeHtml(getFlightConfig().providerLabel || "endpoint seguro")}`
+    : "Kiwi live pendiente: falta endpoint seguro";
 
   root.innerHTML = `
     <div class="flight-toolbar">
@@ -920,7 +904,7 @@ function renderFlightComparator() {
         </span>
         <button class="button button--ghost" type="button" data-refresh-flights>
           <i data-lucide="refresh-cw" aria-hidden="true"></i>
-          Actualizar
+          Actualizar Kiwi
         </button>
       </div>
     </div>
@@ -997,6 +981,63 @@ function normalizeAirlines(value) {
   return value || "";
 }
 
+function uniqueText(items) {
+  return [...new Set(items.filter(Boolean))].join(", ");
+}
+
+function getSegmentDirection(segment, fallbackIndex, outboundCount) {
+  if (typeof segment.return === "number") {
+    return segment.return > 0 ? "return" : "outbound";
+  }
+
+  if (typeof segment.return === "boolean") {
+    return segment.return ? "return" : "outbound";
+  }
+
+  return fallbackIndex >= outboundCount ? "return" : "outbound";
+}
+
+function splitFlightRoute(route) {
+  if (!route.length) {
+    return { outboundSegments: [], returnSegments: [] };
+  }
+
+  const explicitReturnIndex = route.findIndex((segment) => {
+    if (typeof segment.return === "number") {
+      return segment.return > 0;
+    }
+    return segment.return === true;
+  });
+  const outboundCount = explicitReturnIndex > 0 ? explicitReturnIndex : Math.ceil(route.length / 2);
+  const outboundSegments = [];
+  const returnSegments = [];
+
+  route.forEach((segment, index) => {
+    if (getSegmentDirection(segment, index, outboundCount) === "return") {
+      returnSegments.push(segment);
+    } else {
+      outboundSegments.push(segment);
+    }
+  });
+
+  return { outboundSegments, returnSegments };
+}
+
+function countStops(segments) {
+  return Math.max(0, segments.length - 1);
+}
+
+function formatFlightDuration(seconds) {
+  const totalMinutes = Math.round(Number(seconds || 0) / 60);
+  if (!totalMinutes) {
+    return "";
+  }
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return minutes ? `${hours} h ${minutes} min` : `${hours} h`;
+}
+
 function extractRawFlightItems(payload) {
   if (Array.isArray(payload)) {
     return payload;
@@ -1013,10 +1054,10 @@ function extractRawFlightItems(payload) {
 
 function normalizeFlightOption(item) {
   const route = Array.isArray(item.route) ? item.route : [];
-  const outboundSegments = route.filter((segment) => !segment.return);
-  const returnSegments = route.filter((segment) => segment.return);
+  const { outboundSegments, returnSegments } = splitFlightRoute(route);
   const firstSegment = outboundSegments[0] || route[0] || {};
   const lastReturnSegment = returnSegments[returnSegments.length - 1] || route[route.length - 1] || {};
+  const firstReturnSegment = returnSegments[0] || {};
   const departureDate =
     item.departureDate ||
     item.outboundDate ||
@@ -1049,13 +1090,34 @@ function normalizeFlightOption(item) {
 
   const outboundStops =
     item.outboundStops ??
-    item.stops ??
-    Math.max(0, outboundSegments.length - 1);
+    item.outbound?.stops ??
+    countStops(outboundSegments);
   const returnStops =
     item.returnStops ??
-    item.stops ??
-    Math.max(0, returnSegments.length - 1);
+    item.inboundStops ??
+    item.return?.stops ??
+    item.inbound?.stops ??
+    countStops(returnSegments);
   const maxStops = Math.max(Number(outboundStops) || 0, Number(returnStops) || 0);
+  const airlines = normalizeAirlines(
+    item.airlines ||
+      item.carriers ||
+      item.validatingAirlineCodes ||
+      item.airline ||
+      uniqueText(route.map((segment) => segment.airline)),
+  );
+  const durationParts = [
+    formatFlightDuration(item.duration?.departure || item.outbound?.duration),
+    formatFlightDuration(item.duration?.return || item.inbound?.duration),
+  ].filter(Boolean);
+  const routeSummary = [
+    firstSegment.flyFrom && firstSegment.flyTo
+      ? `${firstSegment.flyFrom}-${firstSegment.flyTo}`
+      : "",
+    firstReturnSegment.flyFrom && lastReturnSegment.flyTo
+      ? `${firstReturnSegment.flyFrom}-${lastReturnSegment.flyTo}`
+      : "",
+  ].filter(Boolean);
 
   return {
     price: item.price?.total ?? item.price,
@@ -1063,10 +1125,10 @@ function normalizeFlightOption(item) {
     departureDate,
     returnDate,
     nights,
-    airlines: normalizeAirlines(
-      item.airlines || item.carriers || item.validatingAirlineCodes || item.airline,
-    ),
+    airlines,
     stopsLabel: normalizeStops(maxStops),
+    durationLabel: durationParts.length ? durationParts.join(" / ") : "",
+    routeLabel: routeSummary.join(" · "),
     bookingUrl: item.bookingUrl || item.deep_link || item.url,
   };
 }
@@ -1086,11 +1148,12 @@ function buildFlightRequestUrl(search) {
   url.searchParams.set("destination", search.destination.code);
   url.searchParams.set("departure_from", flightWindow.departureFrom);
   url.searchParams.set("departure_to", latestDepartureDate());
+  url.searchParams.set("return_from", earliestReturnDate());
   url.searchParams.set("return_by", flightWindow.returnBy);
   url.searchParams.set("stay_min", String(flightWindow.stayMin));
   url.searchParams.set("stay_max", String(flightWindow.stayMax));
   url.searchParams.set("currency", flightWindow.currency);
-  url.searchParams.set("limit", "12");
+  url.searchParams.set("limit", "80");
   return url;
 }
 

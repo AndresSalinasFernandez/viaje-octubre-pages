@@ -1,4 +1,4 @@
 window.flightPriceConfig = {
   endpoint: "",
-  providerLabel: "Proveedor live",
+  providerLabel: "Kiwi live",
 };

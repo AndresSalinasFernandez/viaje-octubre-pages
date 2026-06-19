@@ -50,3 +50,27 @@ https://usuario.github.io/repositorio/?room=viaje-amigos
 
 Todos los que abran el mismo enlace verán las mismas notas si Firebase está
 configurado.
+
+## Vuelos en tiempo real con Kiwi
+
+El comparador está preparado para leer un endpoint JSON compatible con Kiwi
+Tequila. La API de Kiwi exige una `apikey` en cabecera, así que no debe ponerse
+en `app.js` ni en `flight-config.js`, porque GitHub Pages es público.
+
+La forma prevista es publicar un proxy pequeño, por ejemplo con Cloudflare
+Workers:
+
+1. Crea un Worker con el contenido de `kiwi-worker.example.js`.
+2. Añade el secret `KIWI_TEQUILA_API_KEY` al Worker.
+3. Copia la URL pública del Worker en `flight-config.js`:
+
+```js
+window.flightPriceConfig = {
+  endpoint: "https://tu-worker.workers.dev",
+  providerLabel: "Kiwi live",
+};
+```
+
+La web consulta ese endpoint al cargar y al pulsar `Actualizar Kiwi`. Para cada
+destino muestra las tres opciones más baratas desde Madrid y, en la columna de
+Barcelona, la opción equivalente para las mismas fechas.
