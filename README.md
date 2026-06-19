@@ -1,4 +1,4 @@
-# Viaje de octubre 2026
+# Viaje de amigos
 
 Web estática para comparar Túnez, Rumanía y Georgia y tomar notas compartidas
 durante la llamada.
@@ -31,19 +31,8 @@ Pasos rápidos:
 2. Crea una aplicación web y copia su configuración pública.
 3. Pega esos valores en `firebase-config.js`.
 4. Activa Firestore.
-5. Usa reglas temporales para el viaje, por ejemplo:
-
-```txt
-rules_version = '2';
-
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /tripRooms/{room}/{document=**} {
-      allow read, write: if request.time < timestamp.date(2026, 11, 15);
-    }
-  }
-}
-```
+5. Usa reglas temporales para el viaje y cámbialas en Firebase cuando ya no
+   necesitéis editar notas.
 
 La configuración de Firebase de una app web no es un secreto, pero las reglas
 sí importan. Lo más prudente es crear un proyecto Firebase exclusivo para esta
@@ -56,7 +45,7 @@ La sala se controla con el parámetro `room`.
 Ejemplo:
 
 ```txt
-https://usuario.github.io/repositorio/?room=octubre-amigos
+https://usuario.github.io/repositorio/?room=viaje-amigos
 ```
 
 Todos los que abran el mismo enlace verán las mismas notas si Firebase está

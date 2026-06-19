@@ -1,5 +1,5 @@
 const roomId =
-  new URLSearchParams(window.location.search).get("room") || "octubre-amigos-2026";
+  new URLSearchParams(window.location.search).get("room") || "viaje-amigos";
 const maxVotes = 4;
 
 const photoCredits = {
@@ -26,13 +26,12 @@ const destinations = [
     image:
       "https://images.unsplash.com/photo-1607869861980-da5f9b8b4969?q=80&w=1200&auto=format&fit=crop",
     summary:
-      "La opción más votada. Ruta circular de 7-8 días con costa, Cartago, oasis, desierto, ksour bereberes y ruinas romanas.",
+      "La opción más votada. Ruta circular con costa, Cartago, oasis, desierto, ksour bereberes y ruinas romanas.",
     metrics: [
-      ["Duración", "7-8 días"],
       ["Vuelos", "250-267 € ida/vuelta directos"],
-      ["Coche", "212 € / 7 días"],
-      ["Hoteles visibles", "171-246 € / 3 noches, 3 personas"],
-      ["Coste visible p.p.", "378-420 € + noches restantes"],
+      ["Coche", "212 € total mostrado"],
+      ["Ejemplo hoteles", "171-246 € total mostrado"],
+      ["Coste visible p.p.", "378-420 € + alojamiento pendiente"],
     ],
     scores: {
       Votos: 5,
@@ -41,24 +40,72 @@ const destinations = [
       Logística: 4,
     },
     strengths: [
-      "Ganó la votación y tiene ruta muy variada para una semana.",
+      "Ganó la votación y tiene una ruta muy variada.",
       "Vuelos directos a Túnez desde Madrid o Barcelona en las capturas.",
-      "Octubre encaja bien por clima y evita el calor fuerte del Sáhara.",
+      "Combina costa, patrimonio romano y desierto sin cambiar de país.",
     ],
     watchouts: [
-      "Hay dos jornadas largas de coche, alrededor de 420 km.",
-      "La captura Madrid sale el 25 de octubre, fuera de la ventana ideal.",
-      "Faltan precios de alojamiento para varias noches de ruta.",
+      "Hay dos tramos largos de coche, alrededor de 420 km.",
+      "Conviene confirmar si el vuelo elegido encaja con la ventana final.",
+      "Faltan precios de alojamiento para parte de la ruta.",
     ],
     route: [
-      ["1", "Túnez - Cartago - Sidi Bou Said - Hammamet", "~90 km", ["Medina de Túnez", "Ruinas de Cartago", "Sidi Bou Said", "Noche en Hammamet"]],
-      ["2", "Hammamet - Kairuán - Tozeur", "~420 km", ["Gran Mezquita", "Medina de Kairuán", "Llegada a Tozeur"]],
-      ["3", "Tozeur y oasis de montaña", "~150 km", ["Chebika", "Tamerza", "Mides", "Opcional Star Wars cerca de Nefta"]],
-      ["4", "Tozeur - Chott el Jerid - Douz", "~130 km", ["Lago salado", "Atardecer en dunas", "Camello o quad"]],
-      ["5", "Douz - Matmata - Tataouine", "~250 km", ["Casas trogloditas", "Hotel Sidi Driss", "Ksour bereberes"]],
-      ["6", "Tataouine y los ksour", "~120 km", ["Ksar Ouled Soltane", "Ksar Hadada", "Chenini", "Douiret"]],
-      ["7", "Tataouine - El Jem - Susa", "~420 km", ["Anfiteatro de El Jem", "Medina de Susa", "Paseo marítimo"]],
-      ["8", "Susa - Dougga - Túnez", "~250 km", ["Dougga", "Regreso a Túnez capital"]],
+      {
+        step: "1",
+        places: ["Túnez", "Cartago", "Sidi Bou Said", "Hammamet"],
+        distance: "~90 km",
+        drive: "Túnez-Cartago 20 min · Cartago-Sidi Bou Said 15 min · Sidi Bou Said-Hammamet 1 h 10 min",
+        highlights: ["Medina de Túnez", "Ruinas de Cartago", "Paseo marítimo de Hammamet"],
+      },
+      {
+        step: "2",
+        places: ["Hammamet", "Kairuán", "Tozeur"],
+        distance: "~420 km",
+        drive: "Hammamet-Kairuán 1 h 10 min · Kairuán-Tozeur 4 h 45 min",
+        highlights: ["Gran Mezquita", "Medina de Kairuán", "Llegada a Tozeur"],
+      },
+      {
+        step: "3",
+        places: ["Tozeur", "Chebika", "Tamerza", "Mides"],
+        distance: "~150 km",
+        drive: "Tozeur-Chebika 1 h · Chebika-Tamerza 20 min · Tamerza-Mides 20 min · regreso a Tozeur 1 h 15 min",
+        highlights: ["Oasis de montaña", "Cañones", "Escenarios de Star Wars cerca de Nefta"],
+      },
+      {
+        step: "4",
+        places: ["Tozeur", "Chott el Jerid", "Douz"],
+        distance: "~130 km",
+        drive: "Tozeur-Chott el Jerid 30 min · Chott el Jerid-Douz 1 h 30 min",
+        highlights: ["Lago salado", "Atardecer en dunas", "Camello o quad"],
+      },
+      {
+        step: "5",
+        places: ["Douz", "Matmata", "Tataouine"],
+        distance: "~250 km",
+        drive: "Douz-Matmata 1 h 30 min · Matmata-Tataouine 2 h 30 min",
+        highlights: ["Casas trogloditas", "Hotel Sidi Driss", "Ksour bereberes"],
+      },
+      {
+        step: "6",
+        places: ["Tataouine", "Ksar Ouled Soltane", "Ksar Hadada", "Chenini", "Douiret"],
+        distance: "~120 km",
+        drive: "Tataouine-Ksar Ouled Soltane 30 min · Ksar Hadada-Chenini 35 min · Chenini-Douiret 25 min · regreso 35 min",
+        highlights: ["Arquitectura bereber", "Pueblos de montaña", "Miradores del sur"],
+      },
+      {
+        step: "7",
+        places: ["Tataouine", "El Jem", "Susa"],
+        distance: "~420 km",
+        drive: "Tataouine-El Jem 4 h 45 min · El Jem-Susa 1 h",
+        highlights: ["Anfiteatro de El Jem", "Medina de Susa", "Paseo marítimo"],
+      },
+      {
+        step: "8",
+        places: ["Susa", "Dougga", "Túnez"],
+        distance: "~250 km",
+        drive: "Susa-Dougga 3 h · Dougga-Túnez 1 h 45 min",
+        highlights: ["Dougga", "Regreso a Túnez capital"],
+      },
     ],
     docs: [
       {
@@ -66,13 +113,6 @@ const destinations = [
         url: "https://docs.google.com/document/d/1bdz8sYsJINO-V1JgpHRWvi00SPM5x2KoIun5HRl8jq4/edit?tab=t.0#heading=h.l87ww4avsxeu",
       },
       photoCredits.tunez,
-    ],
-    shots: [
-      ["assets/doc-shots/tunez-01.png", "Vuelo BCN-TUN directo, 267 €"],
-      ["assets/doc-shots/tunez-02.png", "Vuelo MAD-TUN directo, 25 oct - 1 nov, 250 €"],
-      ["assets/doc-shots/tunez-03.png", "Coche Hyundai Grand i10, 212 € / 7 días"],
-      ["assets/doc-shots/tunez-04.png", "Hoteles en Túnez capital, 171-246 € / 3 noches"],
-      ["assets/doc-shots/tunez-05.png", "Mapa de ruta 7-8 días en Túnez"],
     ],
   },
   {
@@ -83,13 +123,12 @@ const destinations = [
     image:
       "https://images.unsplash.com/photo-1680003210401-08fa173ee905?q=80&w=1200&auto=format&fit=crop",
     summary:
-      "La alternativa más barata en las capturas. Propone Transilvania o una ruta híbrida con Moldavia para 8-9 días.",
+      "La alternativa más barata en las capturas. Propone Transilvania o una ruta híbrida con Moldavia.",
     metrics: [
-      ["Duración", "8-9 días"],
       ["Vuelos", "100-120 € + maleta"],
-      ["Coche", "10-16 € / 10 días en capturas"],
-      ["Hoteles visibles", "177-219 € / 3 noches, 3 personas"],
-      ["Coste visible p.p.", "162-198 € + maleta y noches restantes"],
+      ["Coche", "10-16 € total mostrado"],
+      ["Ejemplo hoteles", "177-219 € total mostrado"],
+      ["Coste visible p.p.", "162-198 € + maleta y alojamiento pendiente"],
     ],
     scores: {
       Votos: 4,
@@ -103,19 +142,67 @@ const destinations = [
       "Tiene una versión más original añadiendo Moldavia y bodegas.",
     ],
     watchouts: [
-      "Transfăgărășan suele estar abierta de junio a octubre, pero depende del tiempo.",
+      "Transfăgărășan depende del tiempo y puede requerir ruta alternativa.",
       "El precio de coche de la captura parece excepcionalmente bajo: conviene verificar condiciones.",
       "La opción Moldavia mete más horas de conducción y frontera.",
     ],
     route: [
-      ["1", "Bucarest", "Llegada", ["Lipscani", "Palacio del Parlamento", "Ateneo Rumano"]],
-      ["2", "Bucarest - Sinaia - Brașov", "180 km / 3 h", ["Castillo de Peleș", "Monasterio de Sinaia", "Castillo de Bran"]],
-      ["3", "Brașov", "Base local", ["Plaza del Consejo", "Iglesia Negra", "Mirador de Tampa"]],
-      ["4", "Brașov - Viscri - Sighișoara", "120 km", ["Viscri UNESCO", "Torre del Reloj", "Murallas medievales"]],
-      ["5", "Sighișoara - Biertan - Sibiu", "100 km", ["Iglesia fortificada", "Piața Mare", "Puente de las Mentiras"]],
-      ["6", "Sibiu - Transfăgărășan", "~200 km", ["Cascada Bâlea", "Lago Bâlea", "Miradores"]],
-      ["7", "Curtea de Argeș - Bucarest", "150 km", ["Monasterio de Curtea de Argeș"]],
-      ["8-9", "Bucarest o extensión Moldavia", "Flexible", ["Relax", "Palacio de Mogosoaia", "Iași y Chisináu si se elige híbrida"]],
+      {
+        step: "1",
+        places: ["Bucarest"],
+        distance: "Tramos urbanos",
+        drive: "Traslados urbanos cortos",
+        highlights: ["Lipscani", "Palacio del Parlamento", "Ateneo Rumano"],
+      },
+      {
+        step: "2",
+        places: ["Bucarest", "Sinaia", "Brașov"],
+        distance: "180 km",
+        drive: "Bucarest-Sinaia 1 h 50 min · Sinaia-Brașov 1 h",
+        highlights: ["Castillo de Peleș", "Monasterio de Sinaia", "Castillo de Bran"],
+      },
+      {
+        step: "3",
+        places: ["Brașov", "Râșnov"],
+        distance: "Excursión local",
+        drive: "Brașov-Râșnov 25 min · regreso 25 min",
+        highlights: ["Plaza del Consejo", "Iglesia Negra", "Mirador de Tampa"],
+      },
+      {
+        step: "4",
+        places: ["Brașov", "Viscri", "Sighișoara"],
+        distance: "120 km",
+        drive: "Brașov-Viscri 1 h 35 min · Viscri-Sighișoara 45 min",
+        highlights: ["Viscri UNESCO", "Torre del Reloj", "Murallas medievales"],
+      },
+      {
+        step: "5",
+        places: ["Sighișoara", "Biertan", "Sibiu"],
+        distance: "100 km",
+        drive: "Sighișoara-Biertan 30 min · Biertan-Sibiu 1 h 20 min",
+        highlights: ["Iglesia fortificada", "Piața Mare", "Puente de las Mentiras"],
+      },
+      {
+        step: "6",
+        places: ["Sibiu", "Transfăgărășan", "Lago Bâlea", "Curtea de Argeș"],
+        distance: "~200 km",
+        drive: "Sibiu-Lago Bâlea 1 h 30 min · Lago Bâlea-Curtea de Argeș 2 h",
+        highlights: ["Cascada Bâlea", "Lago Bâlea", "Miradores"],
+      },
+      {
+        step: "7",
+        places: ["Curtea de Argeș", "Bucarest"],
+        distance: "150 km",
+        drive: "Curtea de Argeș-Bucarest 2 h",
+        highlights: ["Monasterio de Curtea de Argeș", "Regreso a Bucarest"],
+      },
+      {
+        step: "8",
+        places: ["Bucarest", "Iași", "Chisináu", "Orheiul Vechi"],
+        distance: "Extensión opcional",
+        drive: "Bucarest-Iași 6 h · Iași-Chisináu 3 h · Chisináu-Orheiul Vechi 1 h",
+        highlights: ["Palacio de la Cultura", "Chisináu", "Bodegas y monasterios"],
+      },
     ],
     docs: [
       {
@@ -123,11 +210,6 @@ const destinations = [
         url: "https://docs.google.com/document/d/1YvNUpZA3JFGWjA8nRak7Yf7-TmT4Bgr4x7ivAhgrRhk/edit?tab=t.0#heading=h.ofo0au7jzj5u",
       },
       photoCredits.rumania,
-    ],
-    shots: [
-      ["assets/doc-shots/rumania-01.png", "Coches en Bucarest, 10-16 € / 10 días"],
-      ["assets/doc-shots/rumania-02.png", "Hoteles en Bucarest, 177-219 € / 3 noches"],
-      ["assets/doc-shots/rumania-03.png", "Mapa de Rumanía y opción Rumanía + Moldavia"],
     ],
   },
   {
@@ -138,13 +220,12 @@ const destinations = [
     image:
       "https://images.unsplash.com/photo-1761760701075-e9a438acd8c6?q=80&w=1200&auto=format&fit=crop",
     summary:
-      "La ruta más espectacular y de 10 días. Svaneti, Kazbegi, Tiflis y Kakheti, con opción de añadir Armenia.",
+      "La ruta más espectacular. Svaneti, Kazbegi, Tiflis y Kakheti, con opción de añadir Armenia.",
     metrics: [
-      ["Duración", "10 días"],
       ["Vuelos", "212 € MAD / 239 € BCN"],
       ["Equipaje", "85 € carry-on bundle"],
-      ["Coche", "282 € / 10 días"],
-      ["Hoteles visibles", "269-330 € / 5 noches, 3 personas"],
+      ["Coche", "282 € total mostrado"],
+      ["Ejemplo hoteles", "269-330 € total mostrado"],
       ["Coste visible p.p.", "396-443 € sin equipaje, 481-528 € con equipaje"],
     ],
     scores: {
@@ -154,23 +235,72 @@ const destinations = [
       Logística: 3,
     },
     strengths: [
-      "Paisaje muy potente en octubre, especialmente Svaneti y Kazbegi.",
-      "El ejemplo de vuelos encaja perfecto: 10-20 de octubre.",
+      "Paisaje muy potente, especialmente Svaneti y Kazbegi.",
+      "Los vuelos visibles mantienen precio competitivo frente a la ruta.",
       "Permite una primera visita completa sin cruzar fronteras.",
     ],
     watchouts: [
-      "Necesita 10 días reales para no ir corriendo.",
+      "Necesita margen real para no ir corriendo.",
       "La opción Armenia requiere confirmar permiso de cruce con el coche.",
       "Más distancia y más montaña: conviene dejar margen por carreteras y clima.",
     ],
     route: [
-      ["1", "Kutaisi", "Llegada", ["Monasterio de Gelati", "Cueva Prometheus", "Noche en Kutaisi"]],
-      ["2-3", "Mestia y Svaneti", "Ruta de montaña", ["Mestia", "Ushguli", "Colores otoñales"]],
-      ["4", "Regreso hacia Kutaisi o Zugdidi", "Jornada de enlace", ["Paradas panorámicas"]],
-      ["5-6", "Kazbegi", "Stepantsminda", ["Iglesia de Gergeti", "Valle de Truso o Juta", "Carretera Militar Georgiana"]],
-      ["7-8", "Tiflis", "Ciudad", ["Casco antiguo", "Baños de azufre", "Fortaleza Narikala"]],
-      ["9", "Kakheti", "Vino", ["Sighnaghi", "Bodegas qvevri", "Vendimia si cuadra temprano"]],
-      ["10", "Regreso a Kutaisi", "3-4 h desde Kakheti", ["Vuelo de vuelta"]],
+      {
+        step: "1",
+        places: ["Kutaisi", "Gelati", "Cueva Prometheus"],
+        distance: "Excursión local",
+        drive: "Kutaisi-Gelati 20 min · Gelati-Cueva Prometheus 45 min · regreso a Kutaisi 25 min",
+        highlights: ["Monasterio de Gelati", "Cueva Prometheus", "Centro de Kutaisi"],
+      },
+      {
+        step: "2",
+        places: ["Kutaisi", "Mestia", "Ushguli"],
+        distance: "Ruta de montaña",
+        drive: "Kutaisi-Mestia 5 h 30 min · Mestia-Ushguli 2 h 30 min",
+        highlights: ["Svaneti", "Ushguli", "Vistas del Cáucaso"],
+      },
+      {
+        step: "3",
+        places: ["Mestia", "Zugdidi", "Kutaisi"],
+        distance: "Tramo de enlace",
+        drive: "Mestia-Zugdidi 3 h · Zugdidi-Kutaisi 2 h",
+        highlights: ["Carretera de Svaneti", "Paradas panorámicas"],
+      },
+      {
+        step: "4",
+        places: ["Kutaisi", "Ananuri", "Gudauri", "Kazbegi"],
+        distance: "Ruta escénica",
+        drive: "Kutaisi-Ananuri 4 h · Ananuri-Gudauri 1 h · Gudauri-Kazbegi 45 min",
+        highlights: ["Fortaleza de Ananuri", "Carretera Militar Georgiana", "Montañas de Kazbegi"],
+      },
+      {
+        step: "5",
+        places: ["Kazbegi", "Gergeti", "Valle de Truso", "Juta"],
+        distance: "Excursiones locales",
+        drive: "Kazbegi-Gergeti 20 min · Kazbegi-Truso 45 min · Kazbegi-Juta 45 min",
+        highlights: ["Iglesia de Gergeti", "Valle de Truso", "Juta"],
+      },
+      {
+        step: "6",
+        places: ["Kazbegi", "Tiflis"],
+        distance: "Regreso a ciudad",
+        drive: "Kazbegi-Tiflis 3 h",
+        highlights: ["Casco antiguo", "Baños de azufre", "Fortaleza Narikala"],
+      },
+      {
+        step: "7",
+        places: ["Tiflis", "Sighnaghi", "Kakheti"],
+        distance: "Zona de vino",
+        drive: "Tiflis-Sighnaghi 1 h 45 min · Sighnaghi-Telavi 1 h 30 min",
+        highlights: ["Sighnaghi", "Bodegas qvevri", "Paisaje de Kakheti"],
+      },
+      {
+        step: "8",
+        places: ["Kakheti", "Kutaisi"],
+        distance: "Cierre de ruta",
+        drive: "Kakheti-Kutaisi 4 h 30 min",
+        highlights: ["Regreso a Kutaisi", "Últimas paradas según vuelo"],
+      },
     ],
     docs: [
       {
@@ -179,39 +309,60 @@ const destinations = [
       },
       photoCredits.georgia,
     ],
-    shots: [
-      ["assets/doc-shots/georgia-01.png", "Carry-on bundle, 85 €"],
-      ["assets/doc-shots/georgia-02.png", "Vuelo MAD-KUT, 10-20 oct, 212 €"],
-      ["assets/doc-shots/georgia-03.png", "Vuelo BCN-KUT, 239 €"],
-      ["assets/doc-shots/georgia-04.png", "Coche Kia Picanto, 282 € / 10 días"],
-      ["assets/doc-shots/georgia-05.png", "Mapa Georgia sola o Georgia + Armenia"],
-      ["assets/doc-shots/georgia-06.png", "Hoteles en Tiflis, 269-330 € / 5 noches"],
-    ],
   },
 ];
 
-const suggestedDates = [
-  {
-    tag: "Temprano",
-    title: "3-11 octubre",
-    body: "Buena ventana para ruta de 8-9 días y deja margen si suben precios.",
-  },
-  {
-    tag: "Encaja Georgia",
-    title: "10-20 octubre",
-    body: "Ya aparece en capturas de Georgia y permite 10 días completos.",
-  },
-  {
-    tag: "Última ideal",
-    title: "17-24 octubre",
-    body: "Sirve para una ruta de 7-8 días sin pasar del día 24.",
-  },
-  {
-    tag: "Fuera ideal",
-    title: "25 octubre - 1 noviembre",
-    body: "Aparece en Túnez desde Madrid, pero empieza justo después del límite ideal.",
-  },
-];
+const placeQueries = {
+  Túnez: "Tunis medina Tunisia",
+  Cartago: "Carthage Tunisia ruins",
+  "Sidi Bou Said": "Sidi Bou Said Tunisia",
+  Hammamet: "Hammamet Tunisia",
+  Kairuán: "Kairouan Tunisia mosque",
+  Tozeur: "Tozeur Tunisia oasis",
+  Chebika: "Chebika oasis Tunisia",
+  Tamerza: "Tamerza Tunisia",
+  Mides: "Mides canyon Tunisia",
+  "Chott el Jerid": "Chott el Djerid Tunisia",
+  Douz: "Douz Tunisia Sahara",
+  Matmata: "Matmata Tunisia",
+  Tataouine: "Tataouine Tunisia ksar",
+  "Ksar Ouled Soltane": "Ksar Ouled Soltane",
+  "Ksar Hadada": "Ksar Hadada Tunisia",
+  Chenini: "Chenini Tunisia",
+  Douiret: "Douiret Tunisia",
+  "El Jem": "El Djem amphitheatre Tunisia",
+  Susa: "Sousse Tunisia medina",
+  Dougga: "Dougga Tunisia",
+  Bucarest: "Bucharest Romania old town",
+  Sinaia: "Peles Castle Sinaia Romania",
+  Brașov: "Brasov Romania",
+  Râșnov: "Rasnov Citadel Romania",
+  Viscri: "Viscri Romania",
+  Sighișoara: "Sighisoara Romania",
+  Biertan: "Biertan Romania fortified church",
+  Sibiu: "Sibiu Romania",
+  Transfăgărășan: "Transfagarasan Romania",
+  "Lago Bâlea": "Balea Lake Romania",
+  "Curtea de Argeș": "Curtea de Arges Romania",
+  Iași: "Iasi Romania Palace of Culture",
+  Chisináu: "Chisinau Moldova",
+  "Orheiul Vechi": "Orheiul Vechi Moldova",
+  Kutaisi: "Kutaisi Georgia",
+  Gelati: "Gelati Monastery Georgia",
+  "Cueva Prometheus": "Prometheus Cave Georgia",
+  Mestia: "Mestia Georgia Svaneti",
+  Ushguli: "Ushguli Georgia",
+  Zugdidi: "Zugdidi Georgia",
+  Ananuri: "Ananuri Fortress Georgia",
+  Gudauri: "Gudauri Georgia",
+  Kazbegi: "Kazbegi Georgia",
+  Gergeti: "Gergeti Trinity Church Georgia",
+  "Valle de Truso": "Truso Valley Georgia",
+  Juta: "Juta Georgia",
+  Tiflis: "Tbilisi Georgia old town",
+  Sighnaghi: "Sighnaghi Georgia",
+  Kakheti: "Kakheti Georgia vineyard",
+};
 
 const escapeHtml = (value) =>
   String(value ?? "").replace(/[&<>"']/g, (character) => {
@@ -301,56 +452,26 @@ function renderDestinationGrid() {
     .join("");
 }
 
-function renderCalendar() {
-  const calendar = document.querySelector("#calendar");
-  const weekdays = ["L", "M", "X", "J", "V", "S", "D"];
-  const firstDay = new Date(2026, 9, 1);
-  const leadingBlanks = (firstDay.getDay() + 6) % 7;
-  const cells = weekdays.map((day) => `<div class="calendar__weekday">${day}</div>`);
+function renderPlaceToken(place) {
+  const query = placeQueries[place] || place;
+  return `
+    <span class="place-token" tabindex="0" data-place="${escapeHtml(place)}" data-query="${escapeHtml(query)}">
+      ${escapeHtml(place)}
+      <span class="place-popover" role="tooltip" data-preview-panel>
+        <span class="place-popover__status">Cargando imágenes...</span>
+      </span>
+    </span>
+  `;
+}
 
-  for (let index = 0; index < leadingBlanks; index += 1) {
-    cells.push('<div class="calendar__day is-empty" aria-hidden="true"></div>');
-  }
+function renderPlaceTrail(places) {
+  return places
+    .map((place) => renderPlaceToken(place))
+    .join('<span class="route-arrow" aria-hidden="true">→</span>');
+}
 
-  for (let day = 1; day <= 31; day += 1) {
-    const classes = ["calendar__day"];
-    let note = "";
-
-    if (day >= 3 && day <= 24) {
-      classes.push("is-ideal");
-    }
-
-    if (day >= 10 && day <= 20) {
-      classes.push("is-georgia");
-      note = day === 10 ? "Georgia ida" : day === 20 ? "Georgia vuelta" : "";
-    }
-
-    if (day === 25) {
-      classes.push("is-edge");
-      note = "Túnez MAD";
-    }
-
-    cells.push(`
-      <div class="${classes.join(" ")}">
-        <span>${day}</span>
-        ${note ? `<span class="calendar__note">${note}</span>` : ""}
-      </div>
-    `);
-  }
-
-  calendar.innerHTML = cells.join("");
-
-  document.querySelector("#date-picks").innerHTML = suggestedDates
-    .map(
-      (item) => `
-        <div class="date-pick">
-          <span class="date-pick__tag">${item.tag}</span>
-          <strong>${item.title}</strong>
-          <p>${item.body}</p>
-        </div>
-      `,
-    )
-    .join("");
+function renderHighlight(item) {
+  return placeQueries[item] ? renderPlaceToken(item) : escapeHtml(item);
 }
 
 function renderDetails() {
@@ -404,14 +525,17 @@ function renderDetails() {
             <div class="route-list">
               ${destination.route
                 .map(
-                  ([day, title, meta, highlights]) => `
+                  (route) => `
                     <div class="route-day">
-                      <span class="route-day__day">${day}</span>
+                      <span class="route-day__day">${route.step}</span>
                       <div>
-                        <h5>${title}</h5>
-                        <p>${meta}</p>
+                        <h5>${renderPlaceTrail(route.places)}</h5>
+                        <p class="route-meta">
+                          <span>${route.distance}</span>
+                          <span><i data-lucide="car-front" aria-hidden="true"></i>${route.drive}</span>
+                        </p>
                         <ul>
-                          ${highlights.map((item) => `<li>${item}</li>`).join("")}
+                          ${route.highlights.map((item) => `<li>${renderHighlight(item)}</li>`).join("")}
                         </ul>
                       </div>
                     </div>
@@ -421,51 +545,130 @@ function renderDetails() {
             </div>
           </div>
 
-          <div class="shots-block">
-            <h4>Capturas del documento</h4>
-            <div class="shot-gallery">
-              ${destination.shots
-                .map(
-                  ([src, caption]) => `
-                    <button class="shot-button" type="button" data-shot="${src}" data-caption="${escapeHtml(caption)}">
-                      <img src="${src}" alt="${escapeHtml(caption)}" loading="lazy" />
-                      <span>${caption}</span>
-                    </button>
-                  `,
-                )
-                .join("")}
-            </div>
-          </div>
         </article>
       `,
     )
     .join("");
 }
 
-function setupImageDialog() {
-  const dialog = document.querySelector("#image-dialog");
-  const dialogImage = document.querySelector("#dialog-image");
-  const caption = document.querySelector("#dialog-caption");
+const placeImageCache = new Map();
 
-  document.addEventListener("click", (event) => {
-    const shotButton = event.target.closest("[data-shot]");
-    if (shotButton) {
-      dialogImage.src = shotButton.dataset.shot;
-      dialogImage.alt = shotButton.dataset.caption;
-      caption.textContent = shotButton.dataset.caption;
-      dialog.showModal();
-    }
+function cleanFileTitle(title) {
+  return title.replace(/^File:/, "").replace(/\.[a-z0-9]+$/i, "").replace(/[_-]+/g, " ");
+}
 
-    if (event.target.closest("[data-close-dialog]")) {
-      dialog.close();
-    }
+async function fetchPlaceImages(query) {
+  if (placeImageCache.has(query)) {
+    return placeImageCache.get(query);
+  }
+
+  const params = new URLSearchParams({
+    action: "query",
+    format: "json",
+    origin: "*",
+    generator: "search",
+    gsrnamespace: "6",
+    gsrlimit: "8",
+    gsrsearch: query,
+    prop: "imageinfo",
+    iiprop: "url|mime",
+    iiurlwidth: "420",
   });
+  const request = fetch(`https://commons.wikimedia.org/w/api.php?${params.toString()}`)
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("No se pudieron cargar imágenes");
+      }
+      return response.json();
+    })
+    .then((data) =>
+      Object.values(data.query?.pages || {})
+        .map((page) => {
+          const imageInfo = page.imageinfo?.[0];
+          return {
+            title: cleanFileTitle(page.title || "Imagen"),
+            src: imageInfo?.thumburl || imageInfo?.url,
+            href: imageInfo?.descriptionurl || imageInfo?.url,
+            mime: imageInfo?.mime || "",
+          };
+        })
+        .filter((image) => image.src && image.mime.startsWith("image/") && image.mime !== "image/svg+xml")
+        .slice(0, 4),
+    );
 
-  dialog.addEventListener("click", (event) => {
-    if (event.target === dialog) {
-      dialog.close();
+  placeImageCache.set(query, request);
+  return request;
+}
+
+function renderPlacePreview(token, images) {
+  const panel = token.querySelector("[data-preview-panel]");
+  const place = token.dataset.place;
+
+  if (!images.length) {
+    panel.innerHTML = `
+      <span class="place-popover__status">Sin imágenes rápidas para ${escapeHtml(place)}.</span>
+      <a class="place-popover__link" href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=${encodeURIComponent(
+        token.dataset.query,
+      )}" target="_blank" rel="noreferrer">Buscar en Wikimedia Commons</a>
+    `;
+    return;
+  }
+
+  panel.innerHTML = `
+    <span class="place-popover__title">${escapeHtml(place)}</span>
+    <span class="place-popover__grid">
+      ${images
+        .map(
+          (image) => `
+            <a class="place-image" href="${escapeHtml(image.href)}" target="_blank" rel="noreferrer">
+              <img src="${escapeHtml(image.src)}" alt="${escapeHtml(image.title)}" loading="lazy" />
+              <span>${escapeHtml(image.title)}</span>
+            </a>
+          `,
+        )
+        .join("")}
+    </span>
+    <span class="place-popover__source">Imágenes de Wikimedia Commons</span>
+  `;
+}
+
+function loadPlacePreview(token) {
+  if (token.dataset.previewState === "loaded" || token.dataset.previewState === "loading") {
+    return;
+  }
+
+  const panel = token.querySelector("[data-preview-panel]");
+  token.dataset.previewState = "loading";
+  panel.innerHTML = '<span class="place-popover__status">Cargando imágenes...</span>';
+
+  fetchPlaceImages(token.dataset.query)
+    .then((images) => {
+      token.dataset.previewState = "loaded";
+      renderPlacePreview(token, images);
+    })
+    .catch(() => {
+      token.dataset.previewState = "error";
+      panel.innerHTML = `
+        <span class="place-popover__status">No se pudieron cargar imágenes.</span>
+        <a class="place-popover__link" href="https://commons.wikimedia.org/wiki/Special:MediaSearch?type=image&search=${encodeURIComponent(
+          token.dataset.query,
+        )}" target="_blank" rel="noreferrer">Abrir búsqueda</a>
+      `;
+    });
+}
+
+function setupPlacePreviews() {
+  const activate = (event) => {
+    const token = event.target.closest(".place-token");
+    if (!token) {
+      return;
     }
-  });
+    loadPlacePreview(token);
+  };
+
+  document.addEventListener("mouseover", activate);
+  document.addEventListener("focusin", activate);
+  document.addEventListener("touchstart", activate, { passive: true });
 }
 
 function setupCopyLink() {
@@ -811,9 +1014,8 @@ function refreshIcons() {
 
 renderVoteBars();
 renderDestinationGrid();
-renderCalendar();
 renderDetails();
-setupImageDialog();
+setupPlacePreviews();
 setupCopyLink();
 initNotes();
 refreshIcons();

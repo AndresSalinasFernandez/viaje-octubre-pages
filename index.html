@@ -5,21 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Comparativa de viaje de octubre para decidir entre Túnez, Rumanía y Georgia."
+      content="Comparativa de viaje para decidir entre Túnez, Rumanía y Georgia."
     />
     <meta name="theme-color" content="#133f52" />
-    <title>Viaje de octubre | Túnez, Georgia o Rumanía</title>
+    <title>Viaje de amigos | Túnez, Georgia o Rumanía</title>
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <header class="site-header">
       <a class="brand" href="#top" aria-label="Ir al inicio">
-        <span class="brand__mark">OCT</span>
+        <span class="brand__mark">VIA</span>
         <span>Viaje Andrés, Ilias y Dani</span>
       </a>
       <nav class="nav-links" aria-label="Secciones">
         <a href="#comparativa">Comparativa</a>
-        <a href="#fechas">Fechas</a>
         <a href="#rutas">Rutas</a>
         <a href="#notas">Notas</a>
       </nav>
@@ -29,11 +28,11 @@
       <section class="hero-section">
         <div class="hero-grid">
           <div class="hero-copy">
-            <p class="kicker">Llamada de decisión - domingo 21 de junio</p>
-            <h1>Viaje de octubre 2026</h1>
+            <p class="kicker">Llamada de decisión</p>
+            <h1>Viaje de amigos</h1>
             <p class="hero-lede">
               Tres opciones sobre la mesa, una votación hecha y una llamada para cerrar
-              fechas, presupuesto y ruta sin tener que saltar entre documentos.
+              destino, presupuesto y ruta sin tener que saltar entre documentos.
             </p>
             <div class="hero-actions">
               <a class="button button--primary" href="#notas">
@@ -80,8 +79,8 @@
             <div class="call-box">
               <span class="call-box__label">Objetivo de la llamada</span>
               <p>
-                Elegir destino, bloquear una ventana entre el 3 y el 24 de octubre y
-                confirmar qué costes faltan antes de reservar.
+                Elegir destino, confirmar qué costes faltan y decidir qué ruta nos
+                apetece reservar.
               </p>
             </div>
           </aside>
@@ -95,24 +94,6 @@
             <h2>Lo importante de cada opción</h2>
           </div>
           <div class="destination-grid" id="destination-grid"></div>
-        </div>
-      </section>
-
-      <section class="band" id="fechas">
-        <div class="section-shell dates-layout">
-          <div class="section-heading">
-            <p class="eyebrow">Fechas</p>
-            <h2>Octubre después del día 2, idealmente antes del 25</h2>
-            <p>
-              Ventana ideal: del sábado 3 al sábado 24 de octubre. Las capturas ya
-              traen un ejemplo claro para Georgia del 10 al 20; Túnez desde Madrid
-              aparece saliendo el 25, que queda justo fuera del ideal.
-            </p>
-          </div>
-          <div>
-            <div class="calendar" id="calendar" aria-label="Calendario de octubre 2026"></div>
-            <div class="date-picks" id="date-picks"></div>
-          </div>
         </div>
       </section>
 
@@ -164,7 +145,6 @@
                     <option>Túnez</option>
                     <option>Rumanía</option>
                     <option>Georgia</option>
-                    <option>Fechas</option>
                     <option>Presupuesto</option>
                     <option>Ruta</option>
                   </select>
@@ -177,7 +157,7 @@
                   name="text"
                   rows="4"
                   maxlength="600"
-                  placeholder="Ejemplo: confirmar si queremos 8 o 10 días."
+                  placeholder="Ejemplo: confirmar el presupuesto máximo por persona."
                   required
                 ></textarea>
               </label>
@@ -197,14 +177,6 @@
         </div>
       </section>
     </main>
-
-    <dialog class="image-dialog" id="image-dialog">
-      <button class="dialog-close" type="button" data-close-dialog aria-label="Cerrar">
-        <i data-lucide="x" aria-hidden="true"></i>
-      </button>
-      <img id="dialog-image" alt="" />
-      <p id="dialog-caption"></p>
-    </dialog>
 
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <script src="./firebase-config.js"></script>
