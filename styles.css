@@ -505,6 +505,7 @@ h3 {
 }
 
 .score-fill {
+  display: block;
   height: 100%;
   border-radius: inherit;
   background: var(--gold);

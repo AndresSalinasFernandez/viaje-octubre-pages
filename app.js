@@ -364,6 +364,87 @@ const placeQueries = {
   Kakheti: "Kakheti Georgia vineyard",
 };
 
+const wikipediaPageTitles = {
+  Túnez: ["Tunis", "Medina of Tunis", "Bardo National Museum (Tunis)"],
+  Cartago: ["Archaeological site of Carthage", "Carthage", "Baths of Antoninus"],
+  "Sidi Bou Said": ["Sidi Bou Said"],
+  Hammamet: ["Hammamet"],
+  Kairuán: ["Kairouan", "Great Mosque of Kairouan"],
+  Tozeur: ["Tozeur"],
+  Chebika: ["Chebika"],
+  Tamerza: ["Tamerza"],
+  Mides: ["Midès"],
+  "Chott el Jerid": ["Chott el Djerid"],
+  Douz: ["Douz"],
+  Matmata: ["Matmata, Tunisia"],
+  Tataouine: ["Tataouine"],
+  "Ksar Ouled Soltane": ["Ksar Ouled Soltane"],
+  "Ksar Hadada": ["Ksar Hadada"],
+  Chenini: ["Chenini"],
+  Douiret: ["Douiret"],
+  "El Jem": ["El Djem", "Amphitheatre of El Jem"],
+  Susa: ["Sousse", "Medina of Sousse"],
+  Dougga: ["Dougga"],
+  Bucarest: ["Bucharest", "Palace of the Parliament", "Romanian Athenaeum"],
+  Sinaia: ["Sinaia", "Peleș Castle", "Sinaia Monastery"],
+  Brașov: ["Brașov", "Black Church (Brașov)", "Tâmpa, Brașov"],
+  Râșnov: ["Râșnov", "Râșnov Citadel"],
+  Viscri: ["Viscri", "Viscri fortified church"],
+  Sighișoara: ["Sighișoara", "Sighișoara Clock Tower"],
+  Biertan: ["Biertan", "Biertan fortified church"],
+  Sibiu: ["Sibiu", "Bridge of Lies", "Large Square, Sibiu"],
+  Transfăgărășan: ["Transfăgărășan"],
+  "Lago Bâlea": ["Bâlea Lake"],
+  "Curtea de Argeș": ["Curtea de Argeș", "Curtea de Argeș Cathedral"],
+  Iași: ["Iași", "Palace of Culture (Iași)"],
+  Chisináu: ["Chișinău"],
+  "Orheiul Vechi": ["Orheiul Vechi"],
+  Kutaisi: ["Kutaisi", "Bagrati Cathedral"],
+  Gelati: ["Gelati Monastery"],
+  "Cueva Prometheus": ["Prometheus Cave Natural Monument"],
+  Mestia: ["Mestia"],
+  Ushguli: ["Ushguli"],
+  Zugdidi: ["Zugdidi", "Dadiani Palace"],
+  Ananuri: ["Ananuri"],
+  Gudauri: ["Gudauri"],
+  Kazbegi: ["Stepantsminda", "Mount Kazbek"],
+  Gergeti: ["Gergeti Trinity Church"],
+  "Valle de Truso": ["Truso Valley"],
+  Juta: ["Juta, Georgia"],
+  Tiflis: ["Tbilisi", "Narikala", "Old Tbilisi"],
+  Sighnaghi: ["Signagi"],
+  Kakheti: ["Kakheti", "Alazani Valley"],
+};
+
+function commonsImage(fileName, title) {
+  const encodedFile = encodeURIComponent(fileName);
+  return {
+    title,
+    src: `https://commons.wikimedia.org/wiki/Special:FilePath/${encodedFile}?width=640`,
+    href: `https://commons.wikimedia.org/wiki/File:${encodedFile}`,
+    source: "Wikimedia Commons",
+  };
+}
+
+const curatedPlaceImages = {
+  Túnez: [
+    commonsImage("Sidi_Chebaan.jpg", "Sidi Bou Said"),
+    commonsImage("MYTHICAL_CARTHAGE.jpg", "Yacimiento arqueológico de Cartago"),
+  ],
+  Cartago: [
+    commonsImage("MYTHICAL_CARTHAGE.jpg", "Yacimiento arqueológico de Cartago"),
+  ],
+  "Sidi Bou Said": [
+    commonsImage("Sidi_Chebaan.jpg", "Sidi Bou Said"),
+  ],
+  Sinaia: [
+    commonsImage("Castelul_Peles,_Sinaia_-_Vedere_panoramica.jpg", "Castillo de Peleș"),
+  ],
+  Gergeti: [
+    commonsImage("Gergeti_Trinity_Church_-_Outside_Kazbegi.jpg", "Iglesia de Gergeti"),
+  ],
+};
+
 const escapeHtml = (value) =>
   String(value ?? "").replace(/[&<>"']/g, (character) => {
     const replacements = {
@@ -557,11 +638,69 @@ function cleanFileTitle(title) {
   return title.replace(/^File:/, "").replace(/\.[a-z0-9]+$/i, "").replace(/[_-]+/g, " ");
 }
 
-async function fetchPlaceImages(query) {
-  if (placeImageCache.has(query)) {
-    return placeImageCache.get(query);
+function uniqueImages(images) {
+  const seen = new Set();
+  return images.filter((image) => {
+    const src = image.src || "";
+    let decodedSrc = src;
+    try {
+      decodedSrc = decodeURIComponent(src);
+    } catch {
+      decodedSrc = src;
+    }
+    const filePathName = decodedSrc.match(/Special:FilePath\/([^?]+)/)?.[1];
+    const thumbName = decodedSrc.match(/\/thumb\/[^/]+\/[^/]+\/([^/]+)\//)?.[1];
+    const key = (filePathName || thumbName || image.href || image.title || src).toLowerCase();
+    if (!key || seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+}
+
+async function fetchWikipediaImages(place, query) {
+  const titles = wikipediaPageTitles[place] || [query || place];
+  const params = new URLSearchParams({
+    action: "query",
+    format: "json",
+    origin: "*",
+    redirects: "1",
+    prop: "pageimages|info",
+    inprop: "url",
+    pithumbsize: "640",
+    titles: titles.join("|"),
+  });
+
+  const response = await fetch(`https://en.wikipedia.org/w/api.php?${params.toString()}`);
+  if (!response.ok) {
+    throw new Error("No se pudieron cargar imágenes de Wikipedia");
   }
 
+  const data = await response.json();
+  if (data.error) {
+    throw new Error(data.error.info || "No se pudieron cargar imágenes de Wikipedia");
+  }
+
+  const pages = Object.values(data.query?.pages || {});
+  const order = new Map(titles.map((title, index) => [title.toLowerCase(), index]));
+
+  return pages
+    .filter((page) => page.thumbnail?.source && page.fullurl)
+    .sort(
+      (a, b) =>
+        (order.get(String(a.title).toLowerCase()) ?? 99) -
+        (order.get(String(b.title).toLowerCase()) ?? 99),
+    )
+    .map((page) => ({
+      title: page.title,
+      src: page.thumbnail.source,
+      href: page.fullurl,
+      source: "Wikipedia",
+    }));
+}
+
+async function fetchCommonsImages(query) {
   const params = new URLSearchParams({
     action: "query",
     format: "json",
@@ -574,29 +713,43 @@ async function fetchPlaceImages(query) {
     iiprop: "url|mime",
     iiurlwidth: "420",
   });
-  const request = fetch(`https://commons.wikimedia.org/w/api.php?${params.toString()}`)
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("No se pudieron cargar imágenes");
-      }
-      return response.json();
-    })
-    .then((data) =>
-      Object.values(data.query?.pages || {})
-        .map((page) => {
-          const imageInfo = page.imageinfo?.[0];
-          return {
-            title: cleanFileTitle(page.title || "Imagen"),
-            src: imageInfo?.thumburl || imageInfo?.url,
-            href: imageInfo?.descriptionurl || imageInfo?.url,
-            mime: imageInfo?.mime || "",
-          };
-        })
-        .filter((image) => image.src && image.mime.startsWith("image/") && image.mime !== "image/svg+xml")
-        .slice(0, 4),
-    );
 
-  placeImageCache.set(query, request);
+  const response = await fetch(`https://commons.wikimedia.org/w/api.php?${params.toString()}`);
+  if (!response.ok) {
+    throw new Error("No se pudieron cargar imágenes de Commons");
+  }
+
+  const data = await response.json();
+  return Object.values(data.query?.pages || {})
+    .map((page) => {
+      const imageInfo = page.imageinfo?.[0];
+      return {
+        title: cleanFileTitle(page.title || "Imagen"),
+        src: imageInfo?.thumburl || imageInfo?.url,
+        href: imageInfo?.descriptionurl || imageInfo?.url,
+        mime: imageInfo?.mime || "",
+        source: "Wikimedia Commons",
+      };
+    })
+    .filter((image) => image.src && image.mime.startsWith("image/") && image.mime !== "image/svg+xml");
+}
+
+async function fetchPlaceImages(place, query) {
+  if (placeImageCache.has(place)) {
+    return placeImageCache.get(place);
+  }
+
+  const curated = curatedPlaceImages[place] || [];
+  const request = fetchWikipediaImages(place, query)
+    .then((images) => uniqueImages([...curated, ...images]).slice(0, 4))
+    .catch(() => {
+      if (curated.length) {
+        return curated;
+      }
+      return fetchCommonsImages(query).then((images) => uniqueImages(images).slice(0, 4));
+    });
+
+  placeImageCache.set(place, request);
   return request;
 }
 
@@ -628,7 +781,7 @@ function renderPlacePreview(token, images) {
         )
         .join("")}
     </span>
-    <span class="place-popover__source">Imágenes de Wikimedia Commons</span>
+    <span class="place-popover__source">Imágenes de Wikipedia y Wikimedia Commons</span>
   `;
 }
 
@@ -641,7 +794,7 @@ function loadPlacePreview(token) {
   token.dataset.previewState = "loading";
   panel.innerHTML = '<span class="place-popover__status">Cargando imágenes...</span>';
 
-  fetchPlaceImages(token.dataset.query)
+  fetchPlaceImages(token.dataset.place, token.dataset.query)
     .then((images) => {
       token.dataset.previewState = "loaded";
       renderPlacePreview(token, images);
